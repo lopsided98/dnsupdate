@@ -3,7 +3,7 @@ import pypandoc
 
 setup(
     name="dnsupdate",
-    version="0.1a1",
+    version="0.1",
     py_modules=['dnsupdate'],
     install_requires=[
         'PyYAML',
@@ -35,7 +35,7 @@ setup(
         'Natural Language :: English',
         'Topic :: System :: Networking'
     ],
-    long_description = pypandoc.convert('README.md', 'rst')
+    long_description = open('README.rst').read(),
 )
 
 # vim: ts=4:ps=4:et
