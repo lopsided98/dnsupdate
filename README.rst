@@ -5,6 +5,11 @@ dnsupdate
 A modern and flexible dynamic DNS client
 --------------------------------------------
 
+.. image:: https://readthedocs.org/projects/dnsupdate/badge/?version=latest
+   :target: http://dnsupdate.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+                
+
 **dnsupdate** is a dynamic DNS client that has first-class support for IPv6 and
 aims to be easily configurable to meet the needs of any situation. Unlike most
 other dynamic DNS clients, **dnsupdate** has been designed from the
