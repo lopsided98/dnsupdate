@@ -382,13 +382,17 @@ def _parse_address_provider_protos(provider_root):
         providers['ipv4'] = providers['ipv6'] = _parse_address_provider(provider_root)
     return providers
 
-def _parse_args():
+def _get_arg_parser():
     parser = argparse.ArgumentParser(description="Dynamic DNS update client")
     parser.add_argument('config', help="the config file to use", nargs='?')
     parser.add_argument('-f', '--force-update',
-        help=("force an update to occur even if the address has not changed or a service has been disabled"),
+        help=("""force an update to occur even if the address has not changed
+                 or a service has been disabled"""),
         action='store_true', dest='force_update')
-    return parser.parse_args()
+    return parser
+
+def _parse_args():
+    return _get_arg_parser().parse_args()
 
 def main():
     # Parse command line arguments

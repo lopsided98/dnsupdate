@@ -1,8 +1,8 @@
 name: readthedocs-build
 dependencies:
 - python=3.5
+- pyyaml
+- requests
 - pip
 - pip:
-    - PyYAML
-    - requests
-
+    - sphinx-argparse

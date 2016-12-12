@@ -5,7 +5,7 @@ Welcome to dnsupdate's documentation!
    :maxdepth: 3
    
    configuring
+   using
    extending
 
 * :ref:`genindex`
-* :ref:`search`

@@ -1,0 +1,9 @@
+[Unit]
+Description=Run dynamic DNS update client
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/dnsupdate
+
+[Install]
+WantedBy=multi-user.target
