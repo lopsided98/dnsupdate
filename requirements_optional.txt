@@ -1,0 +1,5 @@
+# For scraping router web pages
+beautifulsoup4
+
+# For getting local addresses
+netifaces
