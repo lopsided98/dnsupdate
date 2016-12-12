@@ -13,32 +13,113 @@ import os.path
 import argparse
 
 class UpdateException(Exception):
+    """
+    Signals that an error has occurred while attempting to perform an address
+    update, but the client does not know whether it was caused by a
+    misconfiguration or a problem with the service. If the reason for the error
+    is known, one of this exception's subclasses should be used instead.
+    """
     pass
     
 class UpdateClientException(UpdateException):
+    """
+    Signals that an error has occurred as the result of a misconfiguration of
+    the client. This exception should only be raised when there is very little
+    chance that an error occurred due to a temporary problem with the DNS
+    update service. The reason for this is that when this exception is thrown,
+    **the service that was being updated will be disabled until the user edits
+    the configuration file**.
+    """
     pass
     
 class UpdateServiceException(UpdateException):
+    """
+    Signals that an error has occurred on the DNS service's server while
+    attempting an update. In this case, an error will be printed, but the
+    service will not be disabled.
+    """
     pass
     
 class ConfigException(Exception):
     pass
 
 class AddressProvider:
+    """
+    Provides a standard interface for retrieving IP addresses. Any information
+    needed to obtain the addresses (such as authentication information) should
+    be specified in the constructor. Constructor arguments will become options
+    that can be specified in the config file.
+    """
+    
     def ipv4(self):
+        """
+        Return an IPv4 address to assign to a dynamic DNS domain. Only implement
+        this method if your address provider supports IPv4.
+        
+        :rtype: :class:`ipaddress.IPv4Address`
+        """
         return None
+
     def ipv6(self):
+        """
+        Return an IPv6 address to assign to a dynamic DNS domain. Only implement
+        this method if your address provider supports IPv6.
+        
+        :rtype: :class:`ipaddress.IPv6Address`
+        """
         return None
 
 class DNSService:
+    """
+    Provides a standard interface for updating dynamic DNS services. Any
+    information needed to perform an update (such as the domain name and
+    password) should be specified in the constructor. Constructor arguments
+    will become options that can be specified in the config file.
+    
+    If possible, implementations should send the `address` parameter of the
+    update methods to the service, rather than letting the service
+    automatically detect the client's address. This makes it possible (with a
+    custom address provider) for a client to point a domain at another device.
+    
+    To indicate errors during the update process, implementations of the update
+    methods can raise one of three special exceptions:
+    :class:`UpdateException`, :class:`UpdateServiceException` or
+    :class:`UpdateClientException`. See the documentation for these classes for
+    information on when they should be raised.
+    """
+
     def update_ipv4(address):
+        """
+        Update the IPv4 address of a dynamic DNS domain.
+        
+        :param address: the new IPv4 address
+        :type address: :class:`ipaddress.IPv4Address`
+        """
         raise NotImplementedError('%s does not support IPv4' % __name__)
     def update_ipv6(address):
+        """
+        Update the IPv6 address of a dynamic DNS domain.
+        
+        :param address: the new IPv6 address
+        :type address: :class:`ipaddress.IPv6Address`
+        """
         raise NotImplementedError('%s does not support IPv6' % __name__)
 
-class ComcastX1(AddressProvider):
+class ComcastRouter(AddressProvider):
+    """
+    Scrapes the external IPv4 address from a Comcast/XFINITY router. This
+    address provider does not support IPv6 because it doesn't usually make
+    sense to submit the router's IPv6 address to a dynamic DNS service.
+    
+    This has been tested with an Arris TG1682G, but may work with other routers
+    using Comcast's firmware.
+    
+    :param ip: internal IP address of the router
+    :param username: username for the web interface (usually 'admin')
+    :param password: password for the web interface (router default is 'password')
+    """
 
-    def __init__(self, ip, username, password):
+    def __init__(self, ip, username='admin', password='password'):
         self.ip = ip
         self.username = username
         self.password = password
@@ -58,6 +139,15 @@ class ComcastX1(AddressProvider):
         return ipaddress.IPv4Address(elem.parent.find_next("span", class_='value').text)
 
 class Web(AddressProvider):
+    """
+    Retrieves addresses from a web service (by default: icanhazip). This
+    provider expects the response to contain only the address in plain text
+    (no HTML).
+    
+    :param ipv4_url: URL of the service that retrieves an IPv4 address
+    :param ipv6_url: URL of the service that retrieves an IPv6 address
+    """
+
     def __init__(self, ipv4_url='https://ipv4.icanhazip.com/',
                        ipv6_url='https://ipv6.icanhazip.com/'):
         self.ipv4_url = ipv4_url
@@ -70,6 +160,15 @@ class Web(AddressProvider):
         return IPv6Address(requests.get(self.ipv6_url).text.rstrip())
 
 class Local(AddressProvider):
+    """
+    Retrieves addresses from a local network interface. If you are behind NAT
+    (which is often the case if you are using dynamic DNS), this provider will
+    return your internal IPv4 address. In this case, you will want to use a
+    different provider for IPv4.
+    
+    :param interface: name of the interface to use
+    """
+
     def __init__(self, interface):
         import netifaces
         self.interface = interface
@@ -88,6 +187,17 @@ class Local(AddressProvider):
                     self.addresses[netifaces.AF_INET6])), None)
 
 class StaticURL(DNSService):
+    """
+    Updates addresses by sending an HTTP GET request to statically configured
+    URLs. When using this type of service, the remote server will automatically
+    detect your IP and therefore the address provided by the configured address
+    provider will not be used. In most cases, the result will be the same as if
+    the :class:`Web` provider had been used.
+    
+    :param ipv4_url: URL used to update the IPv4 address
+    :param ipv6_url: URL used to update the IPv6 address
+    """
+
     def __init__(self, ipv4_url, ipv6_url = None):
         self.ipv4_url = ipv4_url
         self.ipv6_url = ipv6_url
@@ -99,6 +209,22 @@ class StaticURL(DNSService):
         requests.get(self.ipv6_url)
 
 class FreeDNS(DNSService):
+    """
+    Updates a domain on FreeDNS_ using the version 2 interface. This API uses a
+    single key for each entry (separate ones for IPv4 and IPv6) instead of
+    separately passing the domain, username and password. The keys are the last
+    part of the given update URL, not including the trailing slash.
+    
+    For example, the update key for the URL
+    ``http://sync.afraid.org/u/VWZIcQnBScVv8yv8DhJxDbnt/`` is
+    ``VWZIcQnBScVv8yv8DhJxDbnt``
+    
+    .. _FreeDNS: http://freedns.afraid.org
+    
+    :param ipv4_key: update key for IPv4
+    :param ipv6_key: update key for IPv6
+    """
+    
     def __init__(self, ipv4_key, ipv6_key = None):
         self.ipv4_key = ipv4_key
         self.ipv6_key = ipv6_key
@@ -131,6 +257,22 @@ class FreeDNS(DNSService):
         return self.__update('https://v6.sync.afraid.org/u/%s/' % self.ipv6_key, address)
 
 class StandardService(DNSService):
+    """
+    Updates a DNS service that uses the `defacto standard protocol`_ that has
+    been defined by Dyn. All the standard return codes are handled. Client
+    configuration errors will cause the service to be disabled.
+    
+    .. _defacto standard protocol: https://help.dyn.com/remote-access-api/
+    
+    :param service_ipv4: domain name of the IPv4 update service
+    :param service_ipv6: domain name of the IPv6 update service
+    :param username: service username (some services use the your (sub)domain
+                     name as the username)
+    :param password: service password (sometimes this is a unique password for
+                     a specific (sub)domain rather than your actual password)
+    :param hostname: fully qualified domain name to update
+    """
+
     def __init__(self, service_ipv4, service_ipv6, username, password, hostname):
         self.service_ipv4 = service_ipv4
         self.service_ipv6 = service_ipv6
@@ -173,9 +315,20 @@ class StandardService(DNSService):
         return self.__update(self.service_ipv6, address)
 
 class NSUpdate(StandardService):
+    """
+    Updates a domain on nsupdate.info_. nsupdate.info
+    uses the Dyn protocol.
+    
+    .. _nsupdate.info: http://nsupdate.info
+    
+    :param hostname: fqdn to update
+    :param secret_key: update key
+    """
+
+
     def __init__(self, hostname, secret_key):
         super().__init__('ipv4.nsupdate.info', 'ipv6.nsupdate.info',
-                                              hostname, secret_key, hostname)
+                         hostname, secret_key, hostname)
 
 def _load_config(arg_file):
     config_files = [arg_file, '~/.config/dnsupdate.conf', '/etc/dnsupdate.conf']
