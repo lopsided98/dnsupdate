@@ -1,0 +1,4 @@
+PyYAML
+requests
+beautifulsoup4[scraping]
+netifaces[interfaces]
