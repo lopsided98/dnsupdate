@@ -104,22 +104,25 @@ class DNSService:
     information on when they should be raised.
     """
 
-    def update_ipv4(address):
+    def update_ipv4(self, address):
         """
         Update the IPv4 address of a dynamic DNS domain.
         
         :param address: the new IPv4 address
         :type address: :class:`ipaddress.IPv4Address`
         """
-        raise NotImplementedError('%s does not support IPv4' % __name__)
-    def update_ipv6(address):
+        raise NotImplementedError('%s does not support IPv4' % self.__class__.__name__)
+    def update_ipv6(self, address):
         """
         Update the IPv6 address of a dynamic DNS domain.
         
         :param address: the new IPv6 address
         :type address: :class:`ipaddress.IPv6Address`
         """
-        raise NotImplementedError('%s does not support IPv6' % __name__)
+        raise NotImplementedError('%s does not support IPv6' % self.__class__.__name__)
+    
+    def __str__(self):
+        return self.__class__.__name__
 
 class ComcastRouter(AddressProvider):
     """
@@ -329,6 +332,9 @@ class StandardService(DNSService):
 
     def update_ipv6(self, address):
         return self.__update(self.service_ipv6, address)
+        
+    def __str__(self):
+        return "%s [%s]" % (self.__class__.__name__, self.hostname)
 
 class NSUpdate(StandardService):
     """
@@ -454,7 +460,7 @@ def main():
         for proto, provider in providers.items():
             if not provider is None:
                 try:
-                    print("Updating %s address of service %d..." % (proto, i))
+                    print("Updating %s address of service %d (%s)..." % ("IP" + proto[2:], i, str(service)))
 
                     service_proto_data = service_data.setdefault(proto, dict())
                     if force_enable or service_proto_data.setdefault('enabled', True):
