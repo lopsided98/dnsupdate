@@ -29,6 +29,8 @@ Likewise, a new DNS service can be created by subclassing :class:`DNSService`.
 
 .. autoclass:: DNSService
    :members:
+   :special-members:
+   :exclude-members: __weakref__
    
 Update exceptions
 ^^^^^^^^^^^^^^^^^

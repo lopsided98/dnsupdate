@@ -122,6 +122,12 @@ class DNSService:
         raise NotImplementedError('%s does not support IPv6' % self.__class__.__name__)
     
     def __str__(self):
+        """
+        If possible, implement this function to provide more information about
+        the service, such as the hostname. The recommended format is
+        ``ClassName [hostname, etc]``. Use ``self.__class__.__name__`` for the
+        class name rather than hard-coding it.
+        """
         return self.__class__.__name__
 
 class ComcastRouter(AddressProvider):
