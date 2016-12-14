@@ -86,12 +86,24 @@ Usage
 
 ::
 
-    dnsupdate [-h] [-f] [config]
+	usage: dnsupdate [-h] [-f] [-V] [config]
 
-    positional arguments:
-      config              the config file to use
+	Dynamic DNS update client
 
-    optional arguments:
-      -h, --help          show this help message and exit
-      -f, --force-update  force an update to occur even if the address has not
-                          changed or a service has been disabled
+	positional arguments:
+	  config              the config file to use
+
+	optional arguments:
+	  -h, --help          show this help message and exit
+	  -f, --force-update  force an update to occur even if the address has not
+		                  changed or a service has been disabled
+	  -V, --version       show program's version number and exit
+                          
+Documentation
+-------------
+
+Documentation is `available online`_, but it can also be built locally by running:
+
+``python3 setup.py build_docs``
+
+.. available online: https://dnsupdate.readthedocs.io/
