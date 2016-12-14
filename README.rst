@@ -106,4 +106,4 @@ Documentation is `available online`_, but it can also be built locally by runnin
 
 ``python3 setup.py build_docs``
 
-.. available online: https://dnsupdate.readthedocs.io/
+.. _available online: https://dnsupdate.readthedocs.io/
