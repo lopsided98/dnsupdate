@@ -28,9 +28,6 @@ needs_sphinx = '1.0'
 # ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinxarg.ext']
 
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
-
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
@@ -73,7 +70,10 @@ todo_include_todos = False
 add_module_names = False
 
 # Intersphinx mappings
-intersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}
+intersphinx_mapping = {
+	'python': ('https://docs.python.org/3/', None),
+	'requests': ('http://docs.python-requests.org/en/master/', None)
+}
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -89,12 +89,6 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # documentation.
 #
 # html_theme_options = {}
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-
-html_static_path = ['_static']
 
 
 # -- Options for HTMLHelp output ------------------------------------------

@@ -2,6 +2,8 @@
 
 import sys
 
+__version__ = '0.1'
+
 if sys.version_info[0] != 3 or sys.version_info[1] < 5:
     sys.exit("dnsupdate requires Python version 3.5 or newer")
 
@@ -11,6 +13,10 @@ import ipaddress
 from ipaddress import IPv4Address, IPv6Address
 import os.path
 import argparse
+
+# Initialize requests session using custom user agent
+session = requests.Session()
+session.headers.update({'User-Agent':'dnsupdate/%s' % __version__})
 
 class UpdateException(Exception):
     """
@@ -49,6 +55,11 @@ class AddressProvider:
     needed to obtain the addresses (such as authentication information) should
     be specified in the constructor. Constructor arguments will become options
     that can be specified in the config file.
+    
+    Implementations must use the requests library for all HTTP requests. This
+    should be done by calling methods of the ``session`` variable in this
+    module, rather than calling the global ``requests`` functions. This makes
+    sure all requests have the correct user agent.
     """
     
     def ipv4(self):
@@ -80,6 +91,11 @@ class DNSService:
     update methods to the service, rather than letting the service
     automatically detect the client's address. This makes it possible (with a
     custom address provider) for a client to point a domain at another device.
+    
+    Implementations must use the requests library for all HTTP requests. This
+    should be done by calling methods of the ``session`` variable in this
+    module, rather than calling the global ``requests`` functions. This makes
+    sure all requests have the correct user agent.
     
     To indicate errors during the update process, implementations of the update
     methods can raise one of three special exceptions:
@@ -127,11 +143,11 @@ class ComcastRouter(AddressProvider):
     def ipv4(self):
         from bs4 import BeautifulSoup
     
-        login = requests.post('http://%s/check.php' % self.ip, 
+        login = session.post('http://%s/check.php' % self.ip, 
                              {'username': self.username, 'password' : self.password})
         auth = login.cookies
 
-        ip_page = requests.get('http://%s/comcast_network.php' % self.ip, cookies=auth)
+        ip_page = session.get('http://%s/comcast_network.php' % self.ip, cookies=auth)
 
         ip_page = BeautifulSoup(ip_page.text, "html.parser")
 
@@ -154,10 +170,10 @@ class Web(AddressProvider):
         self.ipv6_url = ipv6_url
 
     def ipv4(self):
-        return IPv4Address(requests.get(self.ipv4_url).text.rstrip())
+        return IPv4Address(session.get(self.ipv4_url).text.rstrip())
 
     def ipv6(self):
-        return IPv6Address(requests.get(self.ipv6_url).text.rstrip())
+        return IPv6Address(session.get(self.ipv6_url).text.rstrip())
 
 class Local(AddressProvider):
     """
@@ -203,10 +219,10 @@ class StaticURL(DNSService):
         self.ipv6_url = ipv6_url
 
     def update_ipv4(self, address=None):
-        requests.get(self.ipv4_url)
+        session.get(self.ipv4_url)
 
     def update_ipv6(self, address=None):
-        requests.get(self.ipv6_url)
+        session.get(self.ipv6_url)
 
 class FreeDNS(DNSService):
     """
@@ -231,7 +247,7 @@ class FreeDNS(DNSService):
 
     def __update(self, update_url, address):
         # Ask for json response
-        r = requests.get(update_url, params={'content-type': 'json', 'ip': address})
+        r = session.get(update_url, params={'content-type': 'json', 'ip': address})
         if r.status_code == requests.codes.ok:
             r = r.json()
             # Check for error
@@ -281,7 +297,7 @@ class StandardService(DNSService):
         self.hostname = hostname
 
     def __update(self, service_host, address):
-        r = requests.get('https://%s/nic/update' % service_host,
+        r = session.get('https://%s/nic/update' % service_host,
                      auth=(self.username, self.password),
                      params={'myip': address, 'hostname': self.hostname})
         status = r.text.split(' ', 1)[0]
@@ -324,7 +340,6 @@ class NSUpdate(StandardService):
     :param hostname: fqdn to update
     :param secret_key: update key
     """
-
 
     def __init__(self, hostname, secret_key):
         super().__init__('ipv4.nsupdate.info', 'ipv6.nsupdate.info',
@@ -389,6 +404,7 @@ def _get_arg_parser():
         help=("""force an update to occur even if the address has not changed
                  or a service has been disabled"""),
         action='store_true', dest='force_update')
+    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
     return parser
 
 def _parse_args():
