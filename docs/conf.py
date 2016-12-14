@@ -72,7 +72,6 @@ add_module_names = False
 # Intersphinx mappings
 intersphinx_mapping = {
 	'python': ('https://docs.python.org/3/', None),
-	'requests': ('http://docs.python-requests.org/en/master/', None)
 }
 
 # -- Options for HTML output ----------------------------------------------
