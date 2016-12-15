@@ -71,6 +71,7 @@ setup(
             'dnsupdate=dnsupdate:main',
         ],
     },
+    test_suite = 'tests',
 
     # metadata for upload to PyPI
     author="Ben Wolsieffer",
