@@ -4,7 +4,10 @@ dnsupdate
 --------------------------------------------
 A modern and flexible dynamic DNS client
 --------------------------------------------
-
+   
+.. image:: https://travis-ci.org/lopsided98/dnsupdate.svg?branch=master
+   :target: https://travis-ci.org/lopsided98/dnsupdate
+   
 .. image:: https://readthedocs.org/projects/dnsupdate/badge/?version=latest
    :target: http://dnsupdate.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
