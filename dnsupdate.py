@@ -26,7 +26,7 @@ class UpdateException(Exception):
     is known, one of this exception's subclasses should be used instead.
     """
     pass
-    
+
 class UpdateClientException(UpdateException):
     """
     Signals that an error has occurred as the result of a misconfiguration of
@@ -37,7 +37,7 @@ class UpdateClientException(UpdateException):
     the configuration file**.
     """
     pass
-    
+
 class UpdateServiceException(UpdateException):
     """
     Signals that an error has occurred on the DNS service's server while
@@ -45,7 +45,7 @@ class UpdateServiceException(UpdateException):
     service will not be disabled.
     """
     pass
-    
+
 class ConfigException(Exception):
     pass
 
@@ -55,18 +55,18 @@ class AddressProvider:
     needed to obtain the addresses (such as authentication information) should
     be specified in the constructor. Constructor arguments will become options
     that can be specified in the config file.
-    
+
     Implementations must use the requests library for all HTTP requests. This
     should be done by calling methods of the ``session`` variable in this
     module, rather than calling the global ``requests`` functions. This makes
     sure all requests have the correct user agent.
     """
-    
+
     def ipv4(self):
         """
         Return an IPv4 address to assign to a dynamic DNS domain. Only implement
         this method if your address provider supports IPv4.
-        
+
         :rtype: :class:`ipaddress.IPv4Address`
         """
         return None
@@ -75,7 +75,7 @@ class AddressProvider:
         """
         Return an IPv6 address to assign to a dynamic DNS domain. Only implement
         this method if your address provider supports IPv6.
-        
+
         :rtype: :class:`ipaddress.IPv6Address`
         """
         return None
@@ -86,17 +86,17 @@ class DNSService:
     information needed to perform an update (such as the domain name and
     password) should be specified in the constructor. Constructor arguments
     will become options that can be specified in the config file.
-    
+
     If possible, implementations should send the `address` parameter of the
     update methods to the service, rather than letting the service
     automatically detect the client's address. This makes it possible (with a
     custom address provider) for a client to point a domain at another device.
-    
+
     Implementations must use the requests library for all HTTP requests. This
     should be done by calling methods of the ``session`` variable in this
     module, rather than calling the global ``requests`` functions. This makes
     sure all requests have the correct user agent.
-    
+
     To indicate errors during the update process, implementations of the update
     methods can raise one of three special exceptions:
     :class:`UpdateException`, :class:`UpdateServiceException` or
@@ -107,7 +107,7 @@ class DNSService:
     def update_ipv4(self, address):
         """
         Update the IPv4 address of a dynamic DNS domain.
-        
+
         :param address: the new IPv4 address
         :type address: :class:`ipaddress.IPv4Address`
         """
@@ -115,12 +115,12 @@ class DNSService:
     def update_ipv6(self, address):
         """
         Update the IPv6 address of a dynamic DNS domain.
-        
+
         :param address: the new IPv6 address
         :type address: :class:`ipaddress.IPv6Address`
         """
         raise NotImplementedError('%s does not support IPv6' % self.__class__.__name__)
-    
+
     def __str__(self):
         """
         If possible, implement this function to provide more information about
@@ -135,10 +135,10 @@ class ComcastRouter(AddressProvider):
     Scrapes the external IPv4 address from a Comcast/XFINITY router. This
     address provider does not support IPv6 because it doesn't usually make
     sense to submit the router's IPv6 address to a dynamic DNS service.
-    
+
     This has been tested with an Arris TG1682G, but may work with other routers
     using Comcast's firmware.
-    
+
     :param ip: internal IP address of the router
     :param username: username for the web interface (usually 'admin')
     :param password: password for the web interface (router default is 'password')
@@ -151,8 +151,8 @@ class ComcastRouter(AddressProvider):
 
     def ipv4(self):
         from bs4 import BeautifulSoup
-    
-        login = session.post('http://%s/check.php' % self.ip, 
+
+        login = session.post('http://%s/check.php' % self.ip,
                              {'username': self.username, 'password' : self.password})
         auth = login.cookies
 
@@ -168,7 +168,7 @@ class Web(AddressProvider):
     Retrieves addresses from a web service (by default: icanhazip). This
     provider expects the response to contain only the address in plain text
     (no HTML).
-    
+
     :param ipv4_url: URL of the service that retrieves an IPv4 address
     :param ipv6_url: URL of the service that retrieves an IPv6 address
     """
@@ -190,7 +190,7 @@ class Local(AddressProvider):
     (which is often the case if you are using dynamic DNS), this provider will
     return your internal IPv4 address. In this case, you will want to use a
     different provider for IPv4.
-    
+
     :param interface: name of the interface to use
     """
 
@@ -218,7 +218,7 @@ class StaticURL(DNSService):
     detect your IP and therefore the address provided by the configured address
     provider will not be used. In most cases, the result will be the same as if
     the :class:`Web` provider had been used.
-    
+
     :param ipv4_url: URL used to update the IPv4 address
     :param ipv6_url: URL used to update the IPv6 address
     """
@@ -239,17 +239,17 @@ class FreeDNS(DNSService):
     single key for each entry (separate ones for IPv4 and IPv6) instead of
     separately passing the domain, username and password. The keys are the last
     part of the given update URL, not including the trailing slash.
-    
+
     For example, the update key for the URL
     ``http://sync.afraid.org/u/VWZIcQnBScVv8yv8DhJxDbnt/`` is
     ``VWZIcQnBScVv8yv8DhJxDbnt``
-    
+
     .. _FreeDNS: http://freedns.afraid.org
-    
+
     :param ipv4_key: update key for IPv4
     :param ipv6_key: update key for IPv6
     """
-    
+
     def __init__(self, ipv4_key, ipv6_key = None):
         self.ipv4_key = ipv4_key
         self.ipv6_key = ipv6_key
@@ -286,9 +286,9 @@ class StandardService(DNSService):
     Updates a DNS service that uses the `defacto standard protocol`_ that has
     been defined by Dyn. All the standard return codes are handled. Client
     configuration errors will cause the service to be disabled.
-    
+
     .. _defacto standard protocol: https://help.dyn.com/remote-access-api/
-    
+
     :param service_ipv4: domain name of the IPv4 update service
     :param service_ipv6: domain name of the IPv6 update service
     :param username: service username (some services use the your (sub)domain
@@ -338,7 +338,7 @@ class StandardService(DNSService):
 
     def update_ipv6(self, address):
         return self.__update(self.service_ipv6, address)
-        
+
     def __str__(self):
         return "%s [%s]" % (self.__class__.__name__, self.hostname)
 
@@ -346,9 +346,9 @@ class NSUpdate(StandardService):
     """
     Updates a domain on nsupdate.info_. nsupdate.info
     uses the Dyn protocol.
-    
+
     .. _nsupdate.info: http://nsupdate.info
-    
+
     :param hostname: fqdn to update
     :param secret_key: update key
     """
@@ -429,7 +429,7 @@ def main():
     config, config_file = _load_config(args.config)
     cache_file = os.path.expanduser(config.get('cache_file', '~/.cache/dnsupdate.cache'))
     service_data_cache = _load_cache(cache_file)
-    
+
     # Check and fix cache data format
     try:
         service_data_list = service_data_cache['dns_services']
@@ -437,25 +437,25 @@ def main():
         service_data_list = list()
         service_data_cache = dict()
         service_data_cache['dns_services'] = service_data_list
-    
+
     # Enable all services if the config file has been updated
     new_mtime = os.path.getmtime(config_file)
     force_enable = (service_data_cache.get('mtime', None) != new_mtime or
                    args.force_update)
     service_data_cache['mtime'] = new_mtime
-    
+
     # Read global address provider from config, and use Web by default
     global_providers = _parse_address_provider_protos(config.get('address_provider', { 'type': 'Web' }))
-    
+
     # Cache of addresses from providers to prevent duplicate lookups
     new_addresses = dict()
-    
+
     services = config['dns_services']
     for i, service_root in enumerate(services):
         service, providers = _parse_dns_service(service_root)
         # Merge global and local providers
         providers = {**global_providers, **providers}
-        
+
         # Get data for service from saved data, or create it
         if i < len(service_data_list):
             service_data = service_data_list[i]
@@ -504,10 +504,10 @@ def main():
                                file=sys.stderr)
                 except Exception as e:
                     print(("Error: %s") % e, file=sys.stderr)
-    
+
     # Delete any extra services from the cache
     del service_data_list[len(services):]
-    
+
     _save_cache(cache_file, service_data_cache)
 
 if __name__ == '__main__':
