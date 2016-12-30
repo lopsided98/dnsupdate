@@ -296,19 +296,21 @@ class StandardService(DNSService):
     :param password: service password (sometimes this is a unique password for
                      a specific (sub)domain rather than your actual password)
     :param hostname: fully qualified domain name to update
+    :param extra_params: a dictionary of extra params to send to the host
     """
 
-    def __init__(self, service_ipv4, service_ipv6, username, password, hostname):
+    def __init__(self, service_ipv4, service_ipv6, username, password, hostname, *, system=None):
         self.service_ipv4 = service_ipv4
         self.service_ipv6 = service_ipv6
         self.username = username
         self.password = password
         self.hostname = hostname
+        self.system = system
 
     def __update(self, service_host, address):
         r = session.get('https://%s/nic/update' % service_host,
                      auth=(self.username, self.password),
-                     params={'myip': address, 'hostname': self.hostname})
+                     params={'myip': address, 'hostname': self.hostname, 'system': self.system})
         status = r.text.split(' ', 1)[0]
         if status == 'good':
             return True
