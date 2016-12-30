@@ -373,12 +373,12 @@ class OVHDynDNS(StandardService):
     :param system: the type of update (default: ``dyndns``)
     """
 
-    def __init__(self, username, password, hostname, system = 'dyndns'):
+    def __init__(self, username, password, hostname, system='dyndns'):
         super().__init__('www.ovh.com', None,
-                         username, password, hostname, system)
+                         username, password, hostname, system=system)
 
     def update_ipv6(self, address):
-        return super(DNSService, self).update_ipv6(address)
+        return DNSService.update_ipv6(self, address)
 
 def _load_config(arg_file):
     config_files = [arg_file, '~/.config/dnsupdate.conf', '/etc/dnsupdate.conf']
