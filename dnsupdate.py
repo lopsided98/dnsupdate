@@ -296,19 +296,22 @@ class StandardService(DNSService):
     :param password: service password (sometimes this is a unique password for
                      a specific (sub)domain rather than your actual password)
     :param hostname: fully qualified domain name to update
+    :param extra_params: other keyword arguments that will be appended to the
+                         request URL
     """
 
-    def __init__(self, service_ipv4, service_ipv6, username, password, hostname):
+    def __init__(self, service_ipv4, service_ipv6, username, password, hostname, **extra_params):
         self.service_ipv4 = service_ipv4
         self.service_ipv6 = service_ipv6
         self.username = username
         self.password = password
         self.hostname = hostname
+        self.extra_params = extra_params
 
     def __update(self, service_host, address):
         r = session.get('https://%s/nic/update' % service_host,
                      auth=(self.username, self.password),
-                     params={'myip': address, 'hostname': self.hostname})
+                     params={**{'myip': address, 'hostname': self.hostname}, **self.extra_params})
         status = r.text.split(' ', 1)[0]
         if status == 'good':
             return True
@@ -356,6 +359,26 @@ class NSUpdate(StandardService):
     def __init__(self, hostname, secret_key):
         super().__init__('ipv4.nsupdate.info', 'ipv6.nsupdate.info',
                          hostname, secret_key, hostname)
+
+class OVHDynDNS(StandardService):
+    """
+    Updates a domain using `OVH's DynDNS`_ service. This service uses the standard
+    Dyn protocol.
+
+    .. _OVH's DynDNS: http://help.ovh.com/DynDNS
+    
+    :param username: account username
+    :param password: account password
+    :param hostname: the hostname to update
+    :param system: the type of update (default: ``dyndns``)
+    """
+
+    def __init__(self, username, password, hostname, system = 'dyndns'):
+        super().__init__('www.ovh.com', None,
+                         username, password, hostname, system)
+
+    def update_ipv6(self, address):
+        return super(DNSService, self).update_ipv6(address)
 
 def _load_config(arg_file):
     config_files = [arg_file, '~/.config/dnsupdate.conf', '/etc/dnsupdate.conf']
