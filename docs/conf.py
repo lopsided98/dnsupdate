@@ -39,7 +39,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'dnsupdate'
-copyright = '2016, Ben Wolsieffer'
+copyright = '2017, Ben Wolsieffer'
 author = 'Ben Wolsieffer'
 
 # The version info for the project you're documenting, acts as replacement for
