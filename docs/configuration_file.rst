@@ -82,7 +82,7 @@ that was configured globally by assigning it the value ``None``. See
 
     dns_services:
         - type: ServiceClassName1
-          address_provider: &lt;see above&gt;
+          address_provider: <see above>
           args:
               arg1: value1
               arg2: value2
