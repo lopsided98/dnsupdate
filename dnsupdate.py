@@ -2,7 +2,7 @@
 
 import sys
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 if sys.version_info[0] != 3 or sys.version_info[1] < 5:
     sys.exit("dnsupdate requires Python version 3.5 or newer")
