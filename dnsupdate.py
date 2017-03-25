@@ -201,7 +201,6 @@ class Local(AddressProvider):
         import netifaces
         self.interface = interface
         self.addresses = netifaces.ifaddresses(interface)
-        print(self.addresses[netifaces.AF_INET6])
 
     def ipv4(self):
         import netifaces
