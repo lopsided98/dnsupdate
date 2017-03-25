@@ -49,6 +49,9 @@ class UpdateServiceException(UpdateException):
 class ConfigException(Exception):
     pass
 
+class AddressProviderException(Exception):
+    pass
+
 class AddressProvider:
     """
     Provides a standard interface for retrieving IP addresses. Any information
@@ -198,18 +201,27 @@ class Local(AddressProvider):
         import netifaces
         self.interface = interface
         self.addresses = netifaces.ifaddresses(interface)
+        print(self.addresses[netifaces.AF_INET6])
 
     def ipv4(self):
         import netifaces
-        return next(filter(lambda a : a.is_global,
+        addr = next(filter(lambda a : not (a.is_loopback or a.is_link_local),
                     map(lambda aStr : IPv4Address(aStr['addr']),
                     self.addresses[netifaces.AF_INET])), None)
+        if addr is None:
+            raise AddressProviderException(
+                "Interface %s has no valid IPv4 address" % self.interface)
+        return addr
 
     def ipv6(self):
         import netifaces
-        return next(filter(lambda a : a.is_global,
+        addr = next(filter(lambda a : not (a.is_loopback or a.is_link_local),
                     map(lambda aStr : IPv6Address(aStr['addr'].split('%', 1)[0]),
                     self.addresses[netifaces.AF_INET6])), None)
+        if addr is None:
+            raise AddressProviderException(
+                "Interface %s has no valid IPv6 address" % self.interface)
+        return addr
 
 class StaticURL(DNSService):
     """
