@@ -191,20 +191,23 @@ class Local(AddressProvider):
     """
     Retrieves addresses from a local network interface. If you are behind NAT
     (which is often the case if you are using dynamic DNS), this provider will
-    return your internal IPv4 address. In this case, you will want to use a
-    different provider for IPv4.
+    return not return any IPv4 address, unless you enable the ``allow_private``
+    option. Normally, you will want to use a different provider for IPv4 if you
+    are behind NAT.
 
     :param interface: name of the interface to use
+    :param allow_private: consider a private address to be valid
     """
 
-    def __init__(self, interface):
+    def __init__(self, interface, allow_private=False):
         import netifaces
         self.interface = interface
+        self.allow_private = allow_private
         self.addresses = netifaces.ifaddresses(interface)
 
     def ipv4(self):
         import netifaces
-        addr = next(filter(lambda a : not (a.is_loopback or a.is_link_local),
+        addr = next(filter(lambda a : self.__is_valid_address(a),
                     map(lambda aStr : IPv4Address(aStr['addr']),
                     self.addresses[netifaces.AF_INET])), None)
         if addr is None:
@@ -214,13 +217,16 @@ class Local(AddressProvider):
 
     def ipv6(self):
         import netifaces
-        addr = next(filter(lambda a : not (a.is_loopback or a.is_link_local),
+        addr = next(filter(lambda a : self.__is_valid_address(a),
                     map(lambda aStr : IPv6Address(aStr['addr'].split('%', 1)[0]),
                     self.addresses[netifaces.AF_INET6])), None)
         if addr is None:
             raise AddressProviderException(
                 "Interface %s has no valid IPv6 address" % self.interface)
         return addr
+        
+    def __is_valid_address(self, addr):
+        return addr.is_global or (self.allow_private and addr.is_private)
 
 class StaticURL(DNSService):
     """
