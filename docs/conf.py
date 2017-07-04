@@ -12,11 +12,11 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('../'))
 
 import re
 import dnsupdate
-
 
 # -- General configuration ------------------------------------------------
 
@@ -71,7 +71,7 @@ add_module_names = False
 
 # Intersphinx mappings
 intersphinx_mapping = {
-	'python': ('https://docs.python.org/3/', None),
+    'python': ('https://docs.python.org/3/', None),
 }
 
 # -- Options for HTML output ----------------------------------------------
@@ -80,12 +80,13 @@ intersphinx_mapping = {
 # a list of builtin themes.
 #
 try:
-	import sphinx_rtd_theme
-	html_theme = 'sphinx_rtd_theme'
-	html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+    import sphinx_rtd_theme
+
+    html_theme = 'sphinx_rtd_theme'
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 except ImportError:
-	# Allow build to continue even if theme is missing
-	pass
+    # Allow build to continue even if theme is missing
+    pass
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -98,7 +99,6 @@ except ImportError:
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'dnsupdatedoc'
-
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -128,7 +128,6 @@ latex_documents = [
      'Ben Wolsieffer', 'manual'),
 ]
 
-
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
@@ -139,7 +138,6 @@ man_pages = [
     ('configuring', 'dnsupdate', 'configuration file description',
      [author], 5)
 ]
-
 
 # -- Options for Texinfo output -------------------------------------------
 
