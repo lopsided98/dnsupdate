@@ -16,7 +16,8 @@ import argparse
 
 # Initialize requests session using custom user agent
 session = requests.Session()
-session.headers.update({'User-Agent':'dnsupdate/%s' % __version__})
+session.headers.update({'User-Agent': 'dnsupdate/%s' % __version__})
+
 
 class UpdateException(Exception):
     """
@@ -26,6 +27,7 @@ class UpdateException(Exception):
     is known, one of this exception's subclasses should be used instead.
     """
     pass
+
 
 class UpdateClientException(UpdateException):
     """
@@ -38,6 +40,7 @@ class UpdateClientException(UpdateException):
     """
     pass
 
+
 class UpdateServiceException(UpdateException):
     """
     Signals that an error has occurred on the DNS service's server while
@@ -46,11 +49,14 @@ class UpdateServiceException(UpdateException):
     """
     pass
 
+
 class ConfigException(Exception):
     pass
 
+
 class AddressProviderException(Exception):
     pass
+
 
 class AddressProvider:
     """
@@ -82,6 +88,7 @@ class AddressProvider:
         :rtype: :class:`ipaddress.IPv6Address`
         """
         return None
+
 
 class DNSService:
     """
@@ -115,6 +122,7 @@ class DNSService:
         :type address: :class:`ipaddress.IPv4Address`
         """
         raise NotImplementedError('%s does not support IPv4' % self.__class__.__name__)
+
     def update_ipv6(self, address):
         """
         Update the IPv6 address of a dynamic DNS domain.
@@ -132,6 +140,7 @@ class DNSService:
         class name rather than hard-coding it.
         """
         return self.__class__.__name__
+
 
 class ComcastRouter(AddressProvider):
     """
@@ -156,7 +165,7 @@ class ComcastRouter(AddressProvider):
         from bs4 import BeautifulSoup
 
         login = session.post('http://%s/check.php' % self.ip,
-                             {'username': self.username, 'password' : self.password})
+                             {'username': self.username, 'password': self.password})
         auth = login.cookies
 
         ip_page = session.get('http://%s/comcast_network.php' % self.ip, cookies=auth)
@@ -165,6 +174,7 @@ class ComcastRouter(AddressProvider):
 
         elem = ip_page.find(text="WAN IP Address (IPv4):")
         return ipaddress.IPv4Address(elem.parent.find_next("span", class_='value').text)
+
 
 class Web(AddressProvider):
     """
@@ -177,7 +187,7 @@ class Web(AddressProvider):
     """
 
     def __init__(self, ipv4_url='https://ipv4.icanhazip.com/',
-                       ipv6_url='https://ipv6.icanhazip.com/'):
+                 ipv6_url='https://ipv6.icanhazip.com/'):
         self.ipv4_url = ipv4_url
         self.ipv6_url = ipv6_url
 
@@ -186,6 +196,7 @@ class Web(AddressProvider):
 
     def ipv6(self):
         return IPv6Address(session.get(self.ipv6_url).text.rstrip())
+
 
 class Local(AddressProvider):
     """
@@ -207,9 +218,9 @@ class Local(AddressProvider):
 
     def ipv4(self):
         import netifaces
-        addr = next(filter(lambda a : self.__is_valid_address(a),
-                    map(lambda aStr : IPv4Address(aStr['addr']),
-                    self.addresses[netifaces.AF_INET])), None)
+        addr = next(filter(lambda a: self.__is_valid_address(a),
+                           map(lambda aStr: IPv4Address(aStr['addr']),
+                               self.addresses[netifaces.AF_INET])), None)
         if addr is None:
             raise AddressProviderException(
                 "Interface %s has no valid IPv4 address" % self.interface)
@@ -217,16 +228,17 @@ class Local(AddressProvider):
 
     def ipv6(self):
         import netifaces
-        addr = next(filter(lambda a : self.__is_valid_address(a),
-                    map(lambda aStr : IPv6Address(aStr['addr'].split('%', 1)[0]),
-                    self.addresses[netifaces.AF_INET6])), None)
+        addr = next(filter(lambda a: self.__is_valid_address(a),
+                           map(lambda aStr: IPv6Address(aStr['addr'].split('%', 1)[0]),
+                               self.addresses[netifaces.AF_INET6])), None)
         if addr is None:
             raise AddressProviderException(
                 "Interface %s has no valid IPv6 address" % self.interface)
         return addr
-        
+
     def __is_valid_address(self, addr):
         return addr.is_global or (self.allow_private and addr.is_private)
+
 
 class StaticURL(DNSService):
     """
@@ -240,7 +252,7 @@ class StaticURL(DNSService):
     :param ipv6_url: URL used to update the IPv6 address
     """
 
-    def __init__(self, ipv4_url, ipv6_url = None):
+    def __init__(self, ipv4_url, ipv6_url=None):
         self.ipv4_url = ipv4_url
         self.ipv6_url = ipv6_url
 
@@ -249,6 +261,7 @@ class StaticURL(DNSService):
 
     def update_ipv6(self, address=None):
         session.get(self.ipv6_url)
+
 
 class FreeDNS(DNSService):
     """
@@ -267,7 +280,7 @@ class FreeDNS(DNSService):
     :param ipv6_key: update key for IPv6
     """
 
-    def __init__(self, ipv4_key, ipv6_key = None):
+    def __init__(self, ipv4_key, ipv6_key=None):
         self.ipv4_key = ipv4_key
         self.ipv6_key = ipv6_key
 
@@ -298,6 +311,7 @@ class FreeDNS(DNSService):
     def update_ipv6(self, address):
         return self.__update('https://v6.sync.afraid.org/u/%s/' % self.ipv6_key, address)
 
+
 class StandardService(DNSService):
     """
     Updates a DNS service that uses the `defacto standard protocol`_ that has
@@ -327,8 +341,8 @@ class StandardService(DNSService):
 
     def __update(self, service_host, address):
         r = session.get('https://%s/nic/update' % service_host,
-                     auth=(self.username, self.password),
-                     params={**{'myip': address, 'hostname': self.hostname}, **self.extra_params})
+                        auth=(self.username, self.password),
+                        params={**{'myip': address, 'hostname': self.hostname}, **self.extra_params})
         status = r.text.split(' ', 1)[0]
         if status == 'good':
             return True
@@ -362,6 +376,7 @@ class StandardService(DNSService):
     def __str__(self):
         return "%s [%s]" % (self.__class__.__name__, self.hostname)
 
+
 class NSUpdate(StandardService):
     """
     Updates a domain on nsupdate.info_. nsupdate.info
@@ -376,6 +391,7 @@ class NSUpdate(StandardService):
     def __init__(self, hostname, secret_key):
         super().__init__('ipv4.nsupdate.info', 'ipv6.nsupdate.info',
                          hostname, secret_key, hostname)
+
 
 class OVHDynDNS(StandardService):
     """
@@ -397,6 +413,7 @@ class OVHDynDNS(StandardService):
     def update_ipv6(self, address):
         return DNSService.update_ipv6(self, address)
 
+
 def _load_config(arg_file):
     config_files = [arg_file, '~/.config/dnsupdate.conf', '/etc/dnsupdate.conf']
     for config_file in config_files:
@@ -409,9 +426,11 @@ def _load_config(arg_file):
                 pass
     raise FileNotFoundError("Config file not found")
 
+
 def _save_cache(cache_file, cache):
     with open(cache_file, 'w') as fd:
         yaml.dump(cache, fd)
+
 
 def _load_cache(cache_file):
     try:
@@ -419,6 +438,7 @@ def _load_cache(cache_file):
             return yaml.load(fd)
     except FileNotFoundError:
         return list()
+
 
 def _parse_dns_service(service_root):
     if type(service_root) != str:
@@ -432,6 +452,7 @@ def _parse_dns_service(service_root):
     else:
         return eval(service_root), dict()
 
+
 def _parse_address_provider(provider_root):
     if type(provider_root) != str:
         class_name = provider_root['type']
@@ -439,6 +460,7 @@ def _parse_address_provider(provider_root):
         return provider_class(**provider_root.get('args', {}))
     else:
         return eval(provider_root)
+
 
 def _parse_address_provider_protos(provider_root):
     providers = dict()
@@ -449,18 +471,21 @@ def _parse_address_provider_protos(provider_root):
         providers['ipv4'] = providers['ipv6'] = _parse_address_provider(provider_root)
     return providers
 
+
 def _get_arg_parser():
     parser = argparse.ArgumentParser(description="Dynamic DNS update client")
     parser.add_argument('config', help="the config file to use", nargs='?')
     parser.add_argument('-f', '--force-update',
-        help=("""force an update to occur even if the address has not changed
+                        help=("""force an update to occur even if the address has not changed
                  or a service has been disabled"""),
-        action='store_true', dest='force_update')
+                        action='store_true', dest='force_update')
     parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
     return parser
 
+
 def _parse_args():
     return _get_arg_parser().parse_args()
+
 
 def main():
     # Parse command line arguments
@@ -481,11 +506,11 @@ def main():
     # Enable all services if the config file has been updated
     new_mtime = os.path.getmtime(config_file)
     force_enable = (service_data_cache.get('mtime', None) != new_mtime or
-                   args.force_update)
+                    args.force_update)
     service_data_cache['mtime'] = new_mtime
 
     # Read global address provider from config, and use Web by default
-    global_providers = _parse_address_provider_protos(config.get('address_provider', { 'type': 'Web' }))
+    global_providers = _parse_address_provider_protos(config.get('address_provider', {'type': 'Web'}))
 
     # Cache of addresses from providers to prevent duplicate lookups
     new_addresses = dict()
@@ -541,7 +566,7 @@ def main():
                     else:
                         print(("Service has been disabled due to a previous client error. "
                                "Please fix your configuration and try again."),
-                               file=sys.stderr)
+                              file=sys.stderr)
                 except Exception as e:
                     print(("Error: %s") % e, file=sys.stderr)
 
@@ -549,6 +574,7 @@ def main():
     del service_data_list[len(services):]
 
     _save_cache(cache_file, service_data_cache)
+
 
 if __name__ == '__main__':
     main()

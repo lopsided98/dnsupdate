@@ -5,6 +5,7 @@ from setuptools import setup, find_packages
 
 import dnsupdate
 
+
 class BaseBuildDocs(Command):
     user_options = [
         ('builder=', 'b', "Builder to run"),
@@ -19,9 +20,10 @@ class BaseBuildDocs(Command):
 
     def finalize_options(self):
         pass
-        
+
     def _get_sphinx_args(self):
         return ['', '-b', self.builder, self.sourcedir, os.path.join(self.outdir, self.builder)]
+
 
 class BuildDocs(BaseBuildDocs):
     description = "Build documentation using Sphinx"
@@ -34,6 +36,7 @@ class BuildDocs(BaseBuildDocs):
             # Prevent sphinx from exiting
             pass
 
+
 class AutoBuildDocs(BaseBuildDocs):
     description = "Automatically rebuild documentation when files change"
 
@@ -43,8 +46,8 @@ class AutoBuildDocs(BaseBuildDocs):
         # sphinx-autobuild's main function does not take parameters
         sys.argv = self._get_sphinx_args()
         sys.argv.extend([
-            '-z', '.', # Watch source directory
-            '-i', '*.goutputstream*' # Don't watch gedit temp files (yes, gedit)
+            '-z', '.',  # Watch source directory
+            '-i', '*.goutputstream*'  # Don't watch gedit temp files (yes, gedit)
         ])
         try:
             sphinx_autobuild.main()
@@ -52,6 +55,7 @@ class AutoBuildDocs(BaseBuildDocs):
             # Prevent sphinx from exiting
             pass
         sys.argv = oldsysargv
+
 
 setup(
     name="dnsupdate",
@@ -71,7 +75,7 @@ setup(
             'dnsupdate=dnsupdate:main',
         ],
     },
-    test_suite = 'tests',
+    test_suite='tests',
 
     # metadata for upload to PyPI
     author="Ben Wolsieffer",
@@ -88,8 +92,8 @@ setup(
         'Natural Language :: English',
         'Topic :: System :: Networking'
     ],
-    long_description = open('README.rst').read(),
-    
+    long_description=open('README.rst').read(),
+
     cmdclass={
         'build_docs': BuildDocs,
         'autobuild_docs': AutoBuildDocs
