@@ -296,14 +296,14 @@ class FreeDNS(DNSService):
             else:
                 # List of domains that were updated
                 targets = r.get('targets', None)
-                if not targets is None or len(r['targets']) == 0:
+                if targets is not None or len(r['targets']) == 0:
                     # Return True if ip was updated (status 0). Status 100 means no change.
                     return targets[0].get('statuscode', None) == 0
                 else:
                     raise UpdateException("Response did not include status.")
         else:
             r.raise_for_status()
-            return False;
+            return False
 
     def update_ipv4(self, address):
         return self.__update('https://sync.afraid.org/u/%s/' % self.ipv4_key, address)
@@ -361,9 +361,9 @@ class StandardService(DNSService):
         elif status == 'badagent':
             raise UpdateClientException('User agent or HTTP method was rejected')
         elif status == 'dnserr':
-            raise UpdateServerException('Server DNS error encountered')
+            raise UpdateServiceException('Server DNS error encountered')
         elif status == '911':
-            raise UpdateServerException('Server is not currently functioning correctly')
+            raise UpdateServiceException('Server is not currently functioning correctly')
         else:
             raise UpdateException('Unknown response')
 
@@ -417,7 +417,7 @@ class OVHDynDNS(StandardService):
 def _load_config(arg_file):
     config_files = [arg_file, '~/.config/dnsupdate.conf', '/etc/dnsupdate.conf']
     for config_file in config_files:
-        if not config_file is None:
+        if config_file is not None:
             config_file = os.path.expanduser(config_file)
             try:
                 with open(config_file, 'r') as fd:
@@ -529,7 +529,7 @@ def main():
             service_data_list.append(service_data)
 
         for proto, provider in providers.items():
-            if not provider is None:
+            if provider is not None:
                 try:
                     print("Updating %s address of service %d (%s)..." % ("IP" + proto[2:], i, str(service)))
 
