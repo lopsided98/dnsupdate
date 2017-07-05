@@ -554,13 +554,13 @@ def main():
                                 service_proto_data['enabled'] = True
                                 print("Update successful.")
                             except UpdateClientException as e:
-                                print(("Error: %s") % e, file=sys.stderr)
+                                print("Error: %s" % e, file=sys.stderr)
                                 print(("Update failed due to a configuration error. "
                                        "Service will be disabled until the configuration "
                                        "has been fixed."), file=sys.stderr)
                                 service_proto_data['enabled'] = False
                             except UpdateException as ue:
-                                print(("Error: %s") % ue, file=sys.stderr)
+                                print("Error: %s" % ue, file=sys.stderr)
                         else:
                             print("Address has not changed, no update needed.")
                     else:
@@ -568,7 +568,7 @@ def main():
                                "Please fix your configuration and try again."),
                               file=sys.stderr)
                 except Exception as e:
-                    print(("Error: %s") % e, file=sys.stderr)
+                    print("Error: %s" % e, file=sys.stderr)
 
     # Delete any extra services from the cache
     del service_data_list[len(services):]
