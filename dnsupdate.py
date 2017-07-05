@@ -541,49 +541,45 @@ def main():
 
         for proto, provider in providers.items():
             if provider is not None:
-                try:
-                    print("Updating %s address of service %d (%s)..." % ("IP" + proto[2:], i, str(service)))
+                print("Updating %s address of service %d (%s)..." % ("IP" + proto[2:], i, str(service)))
 
-                    service_proto_data = service_data.setdefault(proto, dict())
-                    if force_enable or service_proto_data.setdefault('enabled', True):
-                        # Get updated address
-                        if provider in new_addresses and proto in new_addresses[provider]:
-                            new_address = new_addresses[provider][proto]
-                        else:
-                            # Call ipv4() or ipv6() method
-                            new_address = getattr(provider, proto)()
-                            if provider not in new_addresses:
-                                new_addresses[provider] = {proto: new_address}
-                            else:
-                                new_addresses[provider][proto] = new_address
-                        # Get old address
-                        old_address = service_proto_data.get('address', None)
-                        if str(new_address) != old_address or args.force_update:
-                            try:
-                                getattr(service, 'update_%s' % proto)(new_address)
-                                service_proto_data['address'] = str(new_address)
-                                service_proto_data['enabled'] = True
-                                print("Update successful.")
-                            except UpdateClientException as e:
-                                print("Error: %s" % e, file=sys.stderr)
-                                print(("Update failed due to a configuration error. "
-                                       "Service will be disabled until the configuration "
-                                       "has been fixed."), file=sys.stderr)
-                                service_proto_data['enabled'] = False
-                                exit_code = ExitCode.CLIENT_ERROR
-                            except UpdateException as ue:
-                                print("Error: %s" % ue, file=sys.stderr)
-                                exit_code = ExitCode.SERVICE_ERROR
-                        else:
-                            print("Address has not changed, no update needed.")
+                service_proto_data = service_data.setdefault(proto, dict())
+                if force_enable or service_proto_data.setdefault('enabled', True):
+                    # Get updated address
+                    if provider in new_addresses and proto in new_addresses[provider]:
+                        new_address = new_addresses[provider][proto]
                     else:
-                        print(("Service has been disabled due to a previous client error. "
-                               "Please fix your configuration and try again."),
-                              file=sys.stderr)
-                        exit_code = ExitCode.CLIENT_ERROR
-                except Exception as e:
-                    print("Error: %s" % e, file=sys.stderr)
-                    exit_code = ExitCode.UNKNOWN_ERROR
+                        # Call ipv4() or ipv6() method
+                        new_address = getattr(provider, proto)()
+                        if provider not in new_addresses:
+                            new_addresses[provider] = {proto: new_address}
+                        else:
+                            new_addresses[provider][proto] = new_address
+                    # Get old address
+                    old_address = service_proto_data.get('address', None)
+                    if str(new_address) != old_address or args.force_update:
+                        try:
+                            getattr(service, 'update_%s' % proto)(new_address)
+                            service_proto_data['address'] = str(new_address)
+                            service_proto_data['enabled'] = True
+                            print("Update successful.")
+                        except UpdateClientException as e:
+                            print("Error: %s" % e, file=sys.stderr)
+                            print(("Update failed due to a configuration error. "
+                                   "Service will be disabled until the configuration "
+                                   "has been fixed."), file=sys.stderr)
+                            service_proto_data['enabled'] = False
+                            exit_code = ExitCode.CLIENT_ERROR
+                        except UpdateException as ue:
+                            print("Error: %s" % ue, file=sys.stderr)
+                            exit_code = ExitCode.SERVICE_ERROR
+                    else:
+                        print("Address has not changed, no update needed.")
+                else:
+                    print(("Service has been disabled due to a previous client error. "
+                           "Please fix your configuration and try again."),
+                          file=sys.stderr)
+                    exit_code = ExitCode.CLIENT_ERROR
 
     # Delete any extra services from the cache
     del service_data_list[len(services):]
