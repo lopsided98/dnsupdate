@@ -13,6 +13,15 @@ import ipaddress
 from ipaddress import IPv4Address, IPv6Address
 import os.path
 import argparse
+from enum import Enum
+
+
+class ExitCode(Enum):
+    SUCCESS = 0
+    SERVICE_ERROR = 1
+    CLIENT_ERROR = 2
+    UNKNOWN_ERROR = 3
+
 
 # Initialize requests session using custom user agent
 session = requests.Session()
@@ -477,7 +486,7 @@ def _get_arg_parser():
     parser.add_argument('config', help="the config file to use", nargs='?')
     parser.add_argument('-f', '--force-update',
                         help=("""force an update to occur even if the address has not changed
-                 or a service has been disabled"""),
+                                 or a service has been disabled"""),
                         action='store_true', dest='force_update')
     parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
     return parser
@@ -488,6 +497,8 @@ def _parse_args():
 
 
 def main():
+    exit_code = ExitCode.SUCCESS
+
     # Parse command line arguments
     args = _parse_args()
 
@@ -559,24 +570,30 @@ def main():
                                        "Service will be disabled until the configuration "
                                        "has been fixed."), file=sys.stderr)
                                 service_proto_data['enabled'] = False
+                                exit_code = ExitCode.CLIENT_ERROR
                             except UpdateException as ue:
                                 print("Error: %s" % ue, file=sys.stderr)
+                                exit_code = ExitCode.SERVICE_ERROR
                         else:
                             print("Address has not changed, no update needed.")
                     else:
                         print(("Service has been disabled due to a previous client error. "
                                "Please fix your configuration and try again."),
                               file=sys.stderr)
+                        exit_code = ExitCode.CLIENT_ERROR
                 except Exception as e:
                     print("Error: %s" % e, file=sys.stderr)
+                    exit_code = ExitCode.UNKNOWN_ERROR
 
     # Delete any extra services from the cache
     del service_data_list[len(services):]
 
     _save_cache(cache_file, service_data_cache)
 
+    return exit_code
+
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main().value)
 
 # vim: ts=4:ps=4:et
