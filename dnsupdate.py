@@ -541,7 +541,7 @@ def main():
                         else:
                             # Call ipv4() or ipv6() method
                             new_address = getattr(provider, proto)()
-                            if not provider in new_addresses:
+                            if provider not in new_addresses:
                                 new_addresses[provider] = {proto: new_address}
                             else:
                                 new_addresses[provider][proto] = new_address
