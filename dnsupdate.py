@@ -20,8 +20,7 @@ class ExitCode(Enum):
     SUCCESS = 0
     SERVICE_ERROR = 1
     CLIENT_ERROR = 2
-    ADDRESS_PROVIDER_ERROR = 3
-    UNKNOWN_ERROR = 4
+    OTHER_ERROR = 3
 
 
 # Initialize requests session using custom user agent
@@ -573,7 +572,7 @@ def main():
                                        "has been fixed."), file=sys.stderr)
                                 service_proto_data['enabled'] = False
                                 exit_code = ExitCode.CLIENT_ERROR
-                            except UpdateException as ue:
+                            except UpdateServiceException as ue:
                                 print("Error: %s" % ue, file=sys.stderr)
                                 exit_code = ExitCode.SERVICE_ERROR
                         else:
@@ -583,9 +582,9 @@ def main():
                                "Please fix your configuration and try again."),
                               file=sys.stderr)
                         exit_code = ExitCode.CLIENT_ERROR
-                except AddressProviderException as e:
+                except Exception as e:
                     print("Error: %s" % e, file=sys.stderr)
-                    exit_code = ExitCode.ADDRESS_PROVIDER_ERROR
+                    exit_code = ExitCode.OTHER_ERROR
 
     # Delete any extra services from the cache
     del service_data_list[len(services):]
