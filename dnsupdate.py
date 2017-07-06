@@ -64,6 +64,9 @@ class ConfigException(Exception):
 
 
 class AddressProviderException(Exception):
+    """
+    Signals that an error occurred while attempting to retrieve an IP address.
+    """
     pass
 
 
