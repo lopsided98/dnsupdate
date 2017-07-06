@@ -20,7 +20,8 @@ class ExitCode(Enum):
     SUCCESS = 0
     SERVICE_ERROR = 1
     CLIENT_ERROR = 2
-    UNKNOWN_ERROR = 3
+    ADDRESS_PROVIDER_ERROR = 3
+    UNKNOWN_ERROR = 4
 
 
 # Initialize requests session using custom user agent
@@ -227,23 +228,24 @@ class Local(AddressProvider):
 
     def ipv4(self):
         import netifaces
-        addr = next(filter(lambda a: self.__is_valid_address(a),
-                           map(lambda aStr: IPv4Address(aStr['addr']),
-                               self.addresses[netifaces.AF_INET])), None)
-        if addr is None:
-            raise AddressProviderException(
-                "Interface %s has no valid IPv4 address" % self.interface)
-        return addr
+        try:
+            addr = next(filter(lambda a: self.__is_valid_address(a),
+                               map(lambda aStr: IPv4Address(aStr['addr']),
+                                   self.addresses[netifaces.AF_INET])))
+
+            return addr
+        except (KeyError, StopIteration):
+            raise AddressProviderException("Interface %s has no valid IPv4 address" % self.interface)
 
     def ipv6(self):
         import netifaces
-        addr = next(filter(lambda a: self.__is_valid_address(a),
-                           map(lambda aStr: IPv6Address(aStr['addr'].split('%', 1)[0]),
-                               self.addresses[netifaces.AF_INET6])), None)
-        if addr is None:
-            raise AddressProviderException(
-                "Interface %s has no valid IPv6 address" % self.interface)
-        return addr
+        try:
+            addr = next(filter(lambda a: self.__is_valid_address(a),
+                               map(lambda aStr: IPv6Address(aStr['addr'].split('%', 1)[0]),
+                                   self.addresses[netifaces.AF_INET6])), None)
+            return addr
+        except (KeyError, StopIteration):
+            raise AddressProviderException("Interface %s has no valid IPv6 address" % self.interface)
 
     def __is_valid_address(self, addr):
         return addr.is_global or (self.allow_private and addr.is_private)
@@ -543,43 +545,47 @@ def main():
             if provider is not None:
                 print("Updating %s address of service %d (%s)..." % ("IP" + proto[2:], i, str(service)))
 
-                service_proto_data = service_data.setdefault(proto, dict())
-                if force_enable or service_proto_data.setdefault('enabled', True):
-                    # Get updated address
-                    if provider in new_addresses and proto in new_addresses[provider]:
-                        new_address = new_addresses[provider][proto]
-                    else:
-                        # Call ipv4() or ipv6() method
-                        new_address = getattr(provider, proto)()
-                        if provider not in new_addresses:
-                            new_addresses[provider] = {proto: new_address}
+                try:
+                    service_proto_data = service_data.setdefault(proto, dict())
+                    if force_enable or service_proto_data.setdefault('enabled', True):
+                        # Get updated address
+                        if provider in new_addresses and proto in new_addresses[provider]:
+                            new_address = new_addresses[provider][proto]
                         else:
-                            new_addresses[provider][proto] = new_address
-                    # Get old address
-                    old_address = service_proto_data.get('address', None)
-                    if str(new_address) != old_address or args.force_update:
-                        try:
-                            getattr(service, 'update_%s' % proto)(new_address)
-                            service_proto_data['address'] = str(new_address)
-                            service_proto_data['enabled'] = True
-                            print("Update successful.")
-                        except UpdateClientException as e:
-                            print("Error: %s" % e, file=sys.stderr)
-                            print(("Update failed due to a configuration error. "
-                                   "Service will be disabled until the configuration "
-                                   "has been fixed."), file=sys.stderr)
-                            service_proto_data['enabled'] = False
-                            exit_code = ExitCode.CLIENT_ERROR
-                        except UpdateException as ue:
-                            print("Error: %s" % ue, file=sys.stderr)
-                            exit_code = ExitCode.SERVICE_ERROR
+                            # Call ipv4() or ipv6() method
+                            new_address = getattr(provider, proto)()
+                            if provider not in new_addresses:
+                                new_addresses[provider] = {proto: new_address}
+                            else:
+                                new_addresses[provider][proto] = new_address
+                        # Get old address
+                        old_address = service_proto_data.get('address', None)
+                        if str(new_address) != old_address or args.force_update:
+                            try:
+                                getattr(service, 'update_%s' % proto)(new_address)
+                                service_proto_data['address'] = str(new_address)
+                                service_proto_data['enabled'] = True
+                                print("Update successful.")
+                            except UpdateClientException as e:
+                                print("Error: %s" % e, file=sys.stderr)
+                                print(("Update failed due to a configuration error. "
+                                       "Service will be disabled until the configuration "
+                                       "has been fixed."), file=sys.stderr)
+                                service_proto_data['enabled'] = False
+                                exit_code = ExitCode.CLIENT_ERROR
+                            except UpdateException as ue:
+                                print("Error: %s" % ue, file=sys.stderr)
+                                exit_code = ExitCode.SERVICE_ERROR
+                        else:
+                            print("Address has not changed, no update needed.")
                     else:
-                        print("Address has not changed, no update needed.")
-                else:
-                    print(("Service has been disabled due to a previous client error. "
-                           "Please fix your configuration and try again."),
-                          file=sys.stderr)
-                    exit_code = ExitCode.CLIENT_ERROR
+                        print(("Service has been disabled due to a previous client error. "
+                               "Please fix your configuration and try again."),
+                              file=sys.stderr)
+                        exit_code = ExitCode.CLIENT_ERROR
+                except AddressProviderException as e:
+                    print("Error: %s" % e, file=sys.stderr)
+                    exit_code = ExitCode.ADDRESS_PROVIDER_ERROR
 
     # Delete any extra services from the cache
     del service_data_list[len(services):]
