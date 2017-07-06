@@ -432,7 +432,9 @@ def _load_config(arg_file):
             try:
                 with open(config_file, 'r') as fd:
                     return yaml.load(fd), config_file
-            except:
+            except FileNotFoundError:
+                # All other exceptions should be propagated up so badly
+                # formatted config files are not silently ignored
                 pass
     raise FileNotFoundError("Config file not found")
 
@@ -446,7 +448,7 @@ def _load_cache(cache_file):
     try:
         with open(cache_file, 'r') as fd:
             return yaml.load(fd)
-    except FileNotFoundError:
+    except IOError:
         return list()
 
 
