@@ -59,7 +59,7 @@ class ConfigTest(unittest.TestCase):
         """)
         self.assertRaises(KeyError, dnsupdate._parse_address_provider, config)
 
-    def _parse_dns_service_staticurl(self, config):
+    def _parse_dns_service_static_url(self, config):
         config = load(config)
         service, providers = dnsupdate._parse_dns_service(config)
         self.assertIsInstance(service, dnsupdate.StaticURL)
@@ -67,23 +67,23 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(service.ipv6_url, 'ipv6_test_url')
         return service, providers
 
-    def test_parse_dns_service_staticurl(self):
+    def test_parse_dns_service_static_url(self):
         config = """
             type: StaticURL
             args:
                 ipv4_url: ipv4_test_url
                 ipv6_url: ipv6_test_url
         """
-        service, providers = self._parse_dns_service_staticurl(config)
+        service, providers = self._parse_dns_service_static_url(config)
         self.assertDictEqual(providers, dict())
 
-    def test_parse_dns_service_staticurl_shorthand(self):
+    def test_parse_dns_service_static_url_shorthand(self):
         config = """
             StaticURL("ipv4_test_url", "ipv6_test_url")
         """
-        self._parse_dns_service_staticurl(config)
+        self._parse_dns_service_static_url(config)
 
-    def test_parse_dns_service_staticurl_ipv4_address_provider(self):
+    def test_parse_dns_service_static_url_ipv4_address_provider(self):
         config = """
             type: StaticURL
             address_provider:
@@ -96,11 +96,11 @@ class ConfigTest(unittest.TestCase):
                 ipv4_url: ipv4_test_url
                 ipv6_url: ipv6_test_url
         """
-        service, providers = self._parse_dns_service_staticurl(config)
+        service, providers = self._parse_dns_service_static_url(config)
         self.assertIsInstance(providers['ipv4'], dnsupdate.Web)
         self.assertIsNone(providers.get('ipv6'))
 
-    def test_parse_dns_service_staticurl_single_address_provider(self):
+    def test_parse_dns_service_static_url_single_address_provider(self):
         config = """
             type: StaticURL
             address_provider:
@@ -112,7 +112,7 @@ class ConfigTest(unittest.TestCase):
                 ipv4_url: ipv4_test_url
                 ipv6_url: ipv6_test_url
         """
-        service, providers = self._parse_dns_service_staticurl(config)
+        service, providers = self._parse_dns_service_static_url(config)
         self.assertIsInstance(providers['ipv4'], dnsupdate.Web)
         self.assertEqual(providers['ipv4'], providers['ipv6'])
 
