@@ -1,9 +1,9 @@
 =========
 dnsupdate
 =========
---------------------------------------------
+----------------------------------------
 A modern and flexible dynamic DNS client
---------------------------------------------
+----------------------------------------
    
 .. image:: https://travis-ci.org/lopsided98/dnsupdate.svg?branch=master
    :target: https://travis-ci.org/lopsided98/dnsupdate
@@ -89,18 +89,18 @@ Usage
 
 ::
 
-	usage: dnsupdate [-h] [-f] [-V] [config]
+    usage: dnsupdate [-h] [-f] [-V] [config]
 
-	Dynamic DNS update client
+    Dynamic DNS update client
 
-	positional arguments:
-	  config              the config file to use
+    positional arguments:
+      config              the config file to use
 
-	optional arguments:
-	  -h, --help          show this help message and exit
-	  -f, --force-update  force an update to occur even if the address has not
-		                  changed or a service has been disabled
-	  -V, --version       show program's version number and exit
+    optional arguments:
+      -h, --help          show this help message and exit
+      -f, --force-update  force an update to occur even if the address has not
+                          changed or a service has been disabled
+      -V, --version       show program's version number and exit
                           
 Documentation
 -------------
