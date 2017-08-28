@@ -13,10 +13,10 @@ import ipaddress
 from ipaddress import IPv4Address, IPv6Address
 import os.path
 import argparse
-from enum import Enum
+from enum import IntEnum
 
 
-class ExitCode(Enum):
+class ExitCode(IntEnum):
     SUCCESS = 0
     SERVICE_ERROR = 1
     CLIENT_ERROR = 2
@@ -600,6 +600,6 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main().value)
+    sys.exit(main())
 
 # vim: ts=4:ps=4:et
