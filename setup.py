@@ -66,9 +66,9 @@ setup(
         'requests'
     ],
     extras_require={
-        "Router address scraping": ['beautifulsoup4'],
-        "Local address provider": ['netifaces'],
-        "Build docs": ['sphinx-argparse']
+        "Router-Address-Scraping": ['beautifulsoup4'],
+        "Local-Address-Provider": ['netifaces'],
+        'Build-Docs': ['sphinx-argparse']
     },
     python_requires='>=3.5',
     entry_points={
