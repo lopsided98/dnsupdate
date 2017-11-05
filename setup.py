@@ -93,7 +93,7 @@ setup(
         'Natural Language :: English',
         'Topic :: System :: Networking'
     ],
-    long_description=open('README.rst').read(),
+    long_description=open('README.rst', encoding='utf-8').read(),
 
     cmdclass={
         'build_docs': BuildDocs,
