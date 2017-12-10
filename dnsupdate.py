@@ -232,7 +232,7 @@ class Local(AddressProvider):
         import netifaces
         try:
             addr = next(filter(lambda a: self.__is_valid_address(a),
-                               map(lambda aStr: IPv4Address(aStr['addr']),
+                               map(lambda addr_string: IPv4Address(addr_string['addr']),
                                    self.addresses[netifaces.AF_INET])))
 
             return addr
@@ -243,7 +243,7 @@ class Local(AddressProvider):
         import netifaces
         try:
             addr = next(filter(lambda a: self.__is_valid_address(a),
-                               map(lambda aStr: IPv6Address(aStr['addr'].split('%', 1)[0]),
+                               map(lambda addr_string: IPv6Address(addr_string['addr'].split('%', 1)[0]),
                                    self.addresses[netifaces.AF_INET6])), None)
             return addr
         except (KeyError, StopIteration):
@@ -297,7 +297,8 @@ class FreeDNS(DNSService):
         self.ipv4_key = ipv4_key
         self.ipv6_key = ipv6_key
 
-    def __update(self, update_url, address):
+    @staticmethod
+    def __update(update_url, address):
         # Ask for json response
         r = session.get(update_url, params={'content-type': 'json', 'ip': address})
         if r.status_code == requests.codes.ok:
@@ -319,10 +320,10 @@ class FreeDNS(DNSService):
             return False
 
     def update_ipv4(self, address):
-        return self.__update('https://sync.afraid.org/u/%s/' % self.ipv4_key, address)
+        return FreeDNS.__update('https://sync.afraid.org/u/%s/' % self.ipv4_key, address)
 
     def update_ipv6(self, address):
-        return self.__update('https://v6.sync.afraid.org/u/%s/' % self.ipv6_key, address)
+        return FreeDNS.__update('https://v6.sync.afraid.org/u/%s/' % self.ipv6_key, address)
 
 
 class StandardService(DNSService):
@@ -452,7 +453,7 @@ def _load_cache(cache_file):
         with open(cache_file, 'r') as fd:
             return yaml.load(fd)
     except IOError:
-        return list()
+        return dict()
 
 
 def _parse_dns_service(service_root):
@@ -515,7 +516,7 @@ def main():
     # Check and fix cache data format
     try:
         service_data_list = service_data_cache['dns_services']
-    except:
+    except KeyError:
         service_data_list = list()
         service_data_cache = dict()
         service_data_cache['dns_services'] = service_data_list

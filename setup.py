@@ -47,7 +47,9 @@ class AutoBuildDocs(BaseBuildDocs):
         sys.argv = self._get_sphinx_args()
         sys.argv.extend([
             '-z', '.',  # Watch source directory
-            '-i', '*.goutputstream*'  # Don't watch gedit temp files (yes, gedit)
+            '-i', '*.goutputstream*',  # Ignore gedit temp files
+            '-i', '.idea/*',  # Ignore PyCharm files
+            '-i', '.git/*' # Ignore git directory
         ])
         try:
             sphinx_autobuild.main()

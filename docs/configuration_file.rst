@@ -10,6 +10,7 @@ can specified on the command line, or placed at either
 
 The available options are documented below.
 
+--------------------
 ``address_provider``
 --------------------
 
@@ -62,8 +63,7 @@ If only one of the two protocols is configured, the other protocol is disabled
 
 Default: :class:`Web()`
 
---------------
-
+----------------
 ``dns_services``
 ----------------
 
@@ -96,7 +96,6 @@ The shorthand constructor notation can also be used to initialize a DNS
 service.
 
 --------------
-
 ``cache_file``
 --------------
 
