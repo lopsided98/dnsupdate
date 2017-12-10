@@ -120,6 +120,6 @@ class ConfigTest(unittest.TestCase):
 class CacheTest(unittest.TestCase):
     def test_load_empty_cache(self):
         cache = dnsupdate._load_cache('/invalid_dir/invalid_file.cache')
-        self.assertListEqual(cache, list())
+        self.assertDictEqual(cache, dict())
 
 # vim: ts=4:ps=4:et
