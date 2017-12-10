@@ -443,7 +443,7 @@ class GoogleDomains(StandardService):
     """
 
     def __init__(self, username, password, hostname):
-        super().__init__('domains.google.com', 'domains.google.com',
+        super().__init__('domains.google.com', None,
                          username, password, hostname)
 
     def update_ipv6(self, address):
