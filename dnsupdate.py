@@ -409,8 +409,9 @@ class NSUpdate(StandardService):
 
 class OVHDynDNS(StandardService):
     """
-    Updates a domain using `OVH's DynDNS`_ service. This service uses the standard
-    Dyn protocol.
+    Updates a domain using `OVH's DynDNS`_ service. This service uses the
+    standard Dyn protocol, with an extra ``system`` parameter. This service
+    only supports IPv4.
 
     .. _OVH's DynDNS: http://help.ovh.com/DynDNS
     
@@ -425,6 +426,28 @@ class OVHDynDNS(StandardService):
                          username, password, hostname, system=system)
 
     def update_ipv6(self, address):
+        # OVH DynDNS does not support IPv6
+        return DNSService.update_ipv6(self, address)
+
+
+class GoogleDomains(StandardService):
+    """
+    Updates a domain registered through `Google Domains`_. This service uses
+    the standard Dyn protocol. This service only supports IPv4.
+
+    .. _Google Domains: https://support.google.com/domains/answer/6147083
+
+    :param username: account username
+    :param password: account password
+    :param hostname: the hostname to update
+    """
+
+    def __init__(self, username, password, hostname):
+        super().__init__('domains.google.com', 'domains.google.com',
+                         username, password, hostname)
+
+    def update_ipv6(self, address):
+        # Google Domains does not support IPv6
         return DNSService.update_ipv6(self, address)
 
 

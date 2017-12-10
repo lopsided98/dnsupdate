@@ -8,5 +8,6 @@ DNS Services
 .. autoclass:: FreeDNS
 .. autoclass:: NSUpdate
 .. autoclass:: OVHDynDNS
+.. autoclass:: GoogleDomains
 .. autoclass:: StaticURL
 
