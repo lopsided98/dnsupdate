@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+from typing import Any, IO
 
 __version__ = '0.3'
 
@@ -26,6 +27,44 @@ class ExitCode(IntEnum):
 # Initialize requests session using custom user agent
 session = requests.Session()
 session.headers.update({'User-Agent': 'dnsupdate/%s' % __version__})
+
+
+# Allows passwords to be stored outside of the main configuration file
+# See https://gist.github.com/joshbode/569627ced3076931b02f
+class _ConfigLoader(yaml.SafeLoader):
+    """YAML Loader with `!include` constructor."""
+
+    def __init__(self, stream: IO) -> None:
+        """Initialise Loader."""
+
+        try:
+            self._root = os.path.split(stream.name)[0]
+        except AttributeError:
+            self._root = os.path.curdir
+
+        super().__init__(stream)
+
+
+def construct_include(loader: _ConfigLoader, node: yaml.Node) -> Any:
+    """Include YAML file referenced at node."""
+
+    filename = os.path.abspath(os.path.join(loader._root, loader.construct_scalar(node)))
+
+    with open(filename, 'r') as f:
+        return yaml.load(f, _ConfigLoader)
+
+
+def construct_include_text(loader: _ConfigLoader, node: yaml.Node) -> Any:
+    """Include text file referenced at node."""
+
+    filename = os.path.abspath(os.path.join(loader._root, loader.construct_scalar(node)))
+
+    with open(filename, 'r') as f:
+        return f.read()
+
+
+yaml.add_constructor('!include', construct_include, _ConfigLoader)
+yaml.add_constructor('!include_text', construct_include_text, _ConfigLoader)
 
 
 class UpdateException(Exception):
@@ -458,7 +497,7 @@ def _load_config(arg_file):
             config_file = os.path.expanduser(config_file)
             try:
                 with open(config_file, 'r') as fd:
-                    return yaml.load(fd), config_file
+                    return yaml.load(fd, _ConfigLoader), config_file
             except FileNotFoundError:
                 # All other exceptions should be propagated up so badly
                 # formatted config files are not silently ignored

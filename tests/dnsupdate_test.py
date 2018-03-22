@@ -7,7 +7,7 @@ import dnsupdate
 
 class ConfigTest(unittest.TestCase):
     def _parse_address_provider_web(self, config):
-        config = load(config)
+        config = load(config, dnsupdate._ConfigLoader)
         provider = dnsupdate._parse_address_provider(config)
         self.assertIsInstance(provider, dnsupdate.Web)
         self.assertEqual(provider.ipv4_url, 'ipv4_test_url')
@@ -34,7 +34,7 @@ class ConfigTest(unittest.TestCase):
     def test_parse_address_provider_web_shorthand_no_quotes(self):
         config = load("""
             Web(ipv4_test_url, ipv6_test_url)
-        """)
+        """, dnsupdate._ConfigLoader)
         self.assertRaises(NameError, dnsupdate._parse_address_provider, config)
 
     def test_parse_address_provider_web_shorthand_quotes(self):
@@ -48,7 +48,7 @@ class ConfigTest(unittest.TestCase):
             type: Web
             args:
                 invalid: invalid
-        """)
+        """, dnsupdate._ConfigLoader)
         self.assertRaises(TypeError, dnsupdate._parse_address_provider, config)
 
     def test_parse_address_provider_invalid_class(self):
@@ -56,11 +56,11 @@ class ConfigTest(unittest.TestCase):
             type: InvalidClass
             args:
                 invalid: invalid
-        """)
+        """, dnsupdate._ConfigLoader)
         self.assertRaises(KeyError, dnsupdate._parse_address_provider, config)
 
     def _parse_dns_service_static_url(self, config):
-        config = load(config)
+        config = load(config, dnsupdate._ConfigLoader)
         service, providers = dnsupdate._parse_dns_service(config)
         self.assertIsInstance(service, dnsupdate.StaticURL)
         self.assertEqual(service.ipv4_url, 'ipv4_test_url')
@@ -115,6 +115,23 @@ class ConfigTest(unittest.TestCase):
         service, providers = self._parse_dns_service_static_url(config)
         self.assertIsInstance(providers['ipv4'], dnsupdate.Web)
         self.assertEqual(providers['ipv4'], providers['ipv6'])
+
+    def test_parse_include(self):
+        config = """
+           test_key: !include tests/include.yml
+        """
+        data = load(config, dnsupdate._ConfigLoader)
+        self.assertIn('test_key', data)
+        self.assertIn('included_option', data['test_key'])
+        self.assertEqual(data['test_key']['included_option'], 'included_value')
+
+    def test_parse_include_text(self):
+        config = """
+            test_key: !include_text tests/include.txt
+        """
+        data = load(config, dnsupdate._ConfigLoader)
+        self.assertIn('test_key', data)
+        self.assertEqual(data['test_key'], 'test string\nline two')
 
 
 class CacheTest(unittest.TestCase):
