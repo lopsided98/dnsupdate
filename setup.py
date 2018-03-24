@@ -22,16 +22,16 @@ class BaseBuildDocs(Command):
         pass
 
     def _get_sphinx_args(self):
-        return ['', '-b', self.builder, self.sourcedir, os.path.join(self.outdir, self.builder)]
+        return ['-b', self.builder, self.sourcedir, os.path.join(self.outdir, self.builder)]
 
 
 class BuildDocs(BaseBuildDocs):
     description = "Build documentation using Sphinx"
 
     def run(self):
-        import sphinx
+        import sphinx.cmd.build
         try:
-            sphinx.main(self._get_sphinx_args())
+            sphinx.cmd.build.main(self._get_sphinx_args())
         except SystemExit:
             # Prevent sphinx from exiting
             pass
