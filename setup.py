@@ -29,9 +29,14 @@ class BuildDocs(BaseBuildDocs):
     description = "Build documentation using Sphinx"
 
     def run(self):
-        import sphinx.cmd.build
         try:
-            sphinx.cmd.build.main(self._get_sphinx_args())
+            try:
+                import sphinx.cmd.build
+                sphinx.cmd.build.main(self._get_sphinx_args())
+            except ImportError:
+                # Compatibility with sphinx < 1.7.0
+                import sphinx
+                sphinx.main([''] + self._get_sphinx_args())
         except SystemExit:
             # Prevent sphinx from exiting
             pass
@@ -44,7 +49,7 @@ class AutoBuildDocs(BaseBuildDocs):
         import sphinx_autobuild
         oldsysargv = sys.argv
         # sphinx-autobuild's main function does not take parameters
-        sys.argv = self._get_sphinx_args()
+        sys.argv = [''] + self._get_sphinx_args()
         sys.argv.extend([
             '-z', '.',  # Watch source directory
             '-i', '*.goutputstream*',  # Ignore gedit temp files
