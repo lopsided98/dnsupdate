@@ -1,0 +1,8 @@
+[Unit]
+Description=Dynamic DNS update timer
+
+[Timer]
+OnCalendar=*:0/10
+
+[Install]
+WantedBy=timers.target
