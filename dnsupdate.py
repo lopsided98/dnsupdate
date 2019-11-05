@@ -453,7 +453,7 @@ class OVHDynDNS(StandardService):
     only supports IPv4.
 
     .. _OVH's DynDNS: http://help.ovh.com/DynDNS
-    
+
     :param username: account username
     :param password: account password
     :param hostname: the hostname to update
@@ -513,7 +513,7 @@ def _save_cache(cache_file, cache):
 def _load_cache(cache_file):
     try:
         with open(cache_file, 'r') as fd:
-            return yaml.load(fd)
+            return yaml.load(fd, Loader=yaml.SafeLoader)
     except IOError:
         return dict()
 
