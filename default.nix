@@ -7,7 +7,7 @@ assert webScrapingSupport -> beautifulsoup4 != null;
 
 buildPythonApplication {
   pname = "dnsupdate";
-  version = "0.3";
+  version = "0.4";
 
   src = ./.;
 

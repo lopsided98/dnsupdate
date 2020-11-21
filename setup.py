@@ -94,7 +94,7 @@ setup(
     url="https://github.com/lopsided98/dnsupdate",
     classifiers=[
         'Programming Language :: Python :: 3.5',
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
