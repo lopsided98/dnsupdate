@@ -1,7 +1,8 @@
-build/
-dist/
-*.egg-info/
+/build/
+/dist/
+/*.egg-info/
 /*.conf
 docs/_build*/
 __pycache__/
 .idea/
+/result
