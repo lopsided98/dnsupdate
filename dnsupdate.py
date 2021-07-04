@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 
+import socket
 import sys
-from typing import Any, IO
+from typing import IO, Any
+
+import requests.packages.urllib3.util.connection as urllib3_conn
 
 __version__ = '0.4'
 
 if sys.version_info[0] != 3 or sys.version_info[1] < 5:
     sys.exit("dnsupdate requires Python version 3.5 or newer")
 
+import argparse
+import ipaddress
+import os.path
+from enum import IntEnum
+from ipaddress import IPv4Address, IPv6Address
+
 import requests
 import yaml
-import ipaddress
-from ipaddress import IPv4Address, IPv6Address
-import os.path
-import argparse
-from enum import IntEnum
 
 
 class ExitCode(IntEnum):
@@ -243,10 +247,24 @@ class Web(AddressProvider):
         self.ipv6_url = ipv6_url
 
     def ipv4(self):
-        return IPv4Address(session.get(self.ipv4_url).text.rstrip())
+        # Monkey patch urllib3 to only allow IPv4 connections. requests lacks
+        # a better way of doing this.
+        orig_allowed_gai_family = urllib3_conn.allowed_gai_family
+        urllib3_conn.allowed_gai_family = lambda: socket.AF_INET
+        try:
+            return IPv4Address(session.get(self.ipv4_url).text.rstrip())
+        finally:
+            urllib3_conn.allowed_gai_family = orig_allowed_gai_family
 
     def ipv6(self):
-        return IPv6Address(session.get(self.ipv6_url).text.rstrip())
+        # Monkey patch urllib3 to only allow IPv6 connections. requests lacks
+        # a better way of doing this.
+        orig_allowed_gai_family = urllib3_conn.allowed_gai_family
+        urllib3_conn.allowed_gai_family = lambda: socket.AF_INET6
+        try:
+            return IPv6Address(session.get(self.ipv6_url).text.rstrip())
+        finally:
+            urllib3_conn.allowed_gai_family = orig_allowed_gai_family
 
 
 class Local(AddressProvider):
