@@ -3,8 +3,6 @@ import sys
 from distutils.cmd import Command
 from setuptools import setup
 
-import dnsupdate
-
 
 class BaseBuildDocs(Command):
     user_options = [
@@ -74,8 +72,6 @@ class AutoBuildDocs(BaseBuildDocs):
 
 
 setup(
-    name="dnsupdate",
-    version=dnsupdate.__version__,
     py_modules=["dnsupdate"],
     install_requires=["PyYAML", "requests"],
     extras_require={
@@ -84,28 +80,7 @@ setup(
         "Build-Docs": ["sphinx-argparse"],
     },
     python_requires=">=3.5",
-    entry_points={
-        "console_scripts": [
-            "dnsupdate=dnsupdate:main",
-        ],
-    },
     test_suite="tests",
-    # metadata for upload to PyPI
-    author="Ben Wolsieffer",
-    author_email="benwolsieffer@gmail.com",
-    description="A modern and flexible dynamic DNS client",
-    license="GPLv3",
-    keywords="dns",
-    url="https://github.com/lopsided98/dnsupdate",
-    classifiers=[
-        "Programming Language :: Python :: 3.5",
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: System Administrators",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        "Natural Language :: English",
-        "Topic :: System :: Networking",
-    ],
-    long_description=open("README.rst", encoding="utf-8").read(),
     cmdclass={"build_docs": BuildDocs, "autobuild_docs": AutoBuildDocs},
 )
 

@@ -1,24 +1,19 @@
 #!/usr/bin/env python3
 
-import socket
-import sys
-from typing import IO, Any
-
-import requests.packages.urllib3.util.connection as urllib3_conn
-
-__version__ = "0.4"
-
-if sys.version_info[0] != 3 or sys.version_info[1] < 5:
-    sys.exit("dnsupdate requires Python version 3.5 or newer")
-
 import argparse
 import ipaddress
 import os.path
+import socket
+import sys
 from enum import IntEnum
 from ipaddress import IPv4Address, IPv6Address
+from typing import IO, Any
 
 import requests
+import requests.packages.urllib3.util.connection as urllib3_conn
 import yaml
+
+__version__ = "0.4"
 
 
 class ExitCode(IntEnum):
