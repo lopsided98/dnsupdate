@@ -71,17 +71,6 @@ class AutoBuildDocs(BaseBuildDocs):
         sys.argv = oldsysargv
 
 
-setup(
-    py_modules=["dnsupdate"],
-    install_requires=["PyYAML", "requests"],
-    extras_require={
-        "Router-Address-Scraping": ["beautifulsoup4"],
-        "Local-Address-Provider": ["netifaces"],
-        "Build-Docs": ["sphinx-argparse"],
-    },
-    python_requires=">=3.5",
-    test_suite="tests",
-    cmdclass={"build_docs": BuildDocs, "autobuild_docs": AutoBuildDocs},
-)
+setup(cmdclass={"build_docs": BuildDocs, "autobuild_docs": AutoBuildDocs})
 
 # vim: ts=4:ps=4:et
