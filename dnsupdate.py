@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+__version__ = "0.4"
+
 import argparse
 import ipaddress
 import os.path
@@ -12,8 +14,6 @@ from typing import IO, Any
 import requests
 import requests.packages.urllib3.util.connection as urllib3_conn
 import yaml
-
-__version__ = "0.4"
 
 
 class ExitCode(IntEnum):
