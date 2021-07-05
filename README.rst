@@ -5,12 +5,13 @@ dnsupdate
 A modern and flexible dynamic DNS client
 ----------------------------------------
    
-.. image:: https://github.com/lopsided98/dnsupdate/workflows/build/badge.svg
-   :alt: Build status
-   
+.. image:: https://github.com/lopsided98/dnsupdate/actions/workflows/build.yaml/badge.svg
+    :target: https://github.com/lopsided98/dnsupdate/actions/workflows/build.yaml
+    :alt: Build status
+
 .. image:: https://readthedocs.org/projects/dnsupdate/badge/?version=latest
-   :target: http://dnsupdate.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation Status
+    :target: http://dnsupdate.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
                 
 
 **dnsupdate** is a dynamic DNS client that has first-class support for IPv6 and
