@@ -12,11 +12,10 @@
 #
 import os
 import sys
+import re
 
 sys.path.insert(0, os.path.abspath("../"))
-
-import re
-import dnsupdate
+import dnsupdate  # noqa: E402
 
 # -- General configuration ------------------------------------------------
 

@@ -1,7 +1,7 @@
 import os
 import sys
 from distutils.cmd import Command
-from setuptools import setup, find_packages
+from setuptools import setup
 
 import dnsupdate
 

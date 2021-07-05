@@ -1,9 +1,5 @@
-{ lib, fetchFromGitHub, buildPythonApplication, requests, pyyaml
-, networkInterfaceSupport ? true, netifaces ? null
-, webScrapingSupport ? true, beautifulsoup4 ? null }:
-
-assert networkInterfaceSupport -> netifaces != null;
-assert webScrapingSupport -> beautifulsoup4 != null;
+{ lib, fetchFromGitHub, buildPythonApplication, requests, pyyaml, netifaces
+, beautifulsoup4, black, flake8 }:
 
 buildPythonApplication {
   pname = "dnsupdate";
@@ -11,9 +7,14 @@ buildPythonApplication {
 
   src = ./.;
 
-  propagatedBuildInputs = [ requests pyyaml ]
-    ++ lib.optional webScrapingSupport beautifulsoup4
-    ++ lib.optional networkInterfaceSupport netifaces;
+  propagatedBuildInputs = [ requests pyyaml netifaces beautifulsoup4 ];
+
+  checkInputs = [ black flake8 ];
+
+  preCheck = ''
+    black --check .
+    flake8
+  '';
 
   meta = with lib; {
     description = "A modern and flexible dynamic DNS client";
