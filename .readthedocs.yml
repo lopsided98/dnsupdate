@@ -5,6 +5,7 @@ sphinx:
 
 python:
   version: 3
+  system_packages: False
   install:
     - method: pip
       path: .
