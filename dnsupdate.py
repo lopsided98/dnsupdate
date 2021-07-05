@@ -6,7 +6,7 @@ from typing import IO, Any
 
 import requests.packages.urllib3.util.connection as urllib3_conn
 
-__version__ = '0.4'
+__version__ = "0.4"
 
 if sys.version_info[0] != 3 or sys.version_info[1] < 5:
     sys.exit("dnsupdate requires Python version 3.5 or newer")
@@ -30,7 +30,7 @@ class ExitCode(IntEnum):
 
 # Initialize requests session using custom user agent
 session = requests.Session()
-session.headers.update({'User-Agent': 'dnsupdate/%s' % __version__})
+session.headers.update({"User-Agent": "dnsupdate/%s" % __version__})
 
 
 # Allows passwords to be stored outside of the main configuration file
@@ -54,7 +54,7 @@ def construct_include(loader: _ConfigLoader, node: yaml.Node) -> Any:
 
     filename = os.path.abspath(os.path.join(loader._root, loader.construct_scalar(node)))
 
-    with open(filename, 'r') as f:
+    with open(filename, "r") as f:
         return yaml.load(f, _ConfigLoader)
 
 
@@ -63,12 +63,12 @@ def construct_include_text(loader: _ConfigLoader, node: yaml.Node) -> Any:
 
     filename = os.path.abspath(os.path.join(loader._root, loader.construct_scalar(node)))
 
-    with open(filename, 'r') as f:
+    with open(filename, "r") as f:
         return f.read()
 
 
-yaml.add_constructor('!include', construct_include, _ConfigLoader)
-yaml.add_constructor('!include_text', construct_include_text, _ConfigLoader)
+yaml.add_constructor("!include", construct_include, _ConfigLoader)
+yaml.add_constructor("!include_text", construct_include_text, _ConfigLoader)
 
 
 class UpdateException(Exception):
@@ -78,6 +78,7 @@ class UpdateException(Exception):
     misconfiguration or a problem with the service. If the reason for the error
     is known, one of this exception's subclasses should be used instead.
     """
+
     pass
 
 
@@ -90,6 +91,7 @@ class UpdateClientException(UpdateException):
     **the service that was being updated will be disabled until the user edits
     the configuration file**.
     """
+
     pass
 
 
@@ -99,6 +101,7 @@ class UpdateServiceException(UpdateException):
     attempting an update. In this case, an error will be printed, but the
     service will not be disabled.
     """
+
     pass
 
 
@@ -110,6 +113,7 @@ class AddressProviderException(Exception):
     """
     Signals that an error occurred while attempting to retrieve an IP address.
     """
+
     pass
 
 
@@ -176,7 +180,7 @@ class DNSService:
         :param address: the new IPv4 address
         :type address: :class:`ipaddress.IPv4Address`
         """
-        raise NotImplementedError('%s does not support IPv4' % self.__class__.__name__)
+        raise NotImplementedError("%s does not support IPv4" % self.__class__.__name__)
 
     def update_ipv6(self, address):
         """
@@ -185,7 +189,7 @@ class DNSService:
         :param address: the new IPv6 address
         :type address: :class:`ipaddress.IPv6Address`
         """
-        raise NotImplementedError('%s does not support IPv6' % self.__class__.__name__)
+        raise NotImplementedError("%s does not support IPv6" % self.__class__.__name__)
 
     def __str__(self):
         """
@@ -211,7 +215,7 @@ class ComcastRouter(AddressProvider):
     :param password: password for the web interface (router default is 'password')
     """
 
-    def __init__(self, ip, username='admin', password='password'):
+    def __init__(self, ip, username="admin", password="password"):
         self.ip = ip
         self.username = username
         self.password = password
@@ -219,16 +223,17 @@ class ComcastRouter(AddressProvider):
     def ipv4(self):
         from bs4 import BeautifulSoup
 
-        login = session.post('http://%s/check.php' % self.ip,
-                             {'username': self.username, 'password': self.password})
+        login = session.post(
+            "http://%s/check.php" % self.ip, {"username": self.username, "password": self.password}
+        )
         auth = login.cookies
 
-        ip_page = session.get('http://%s/comcast_network.php' % self.ip, cookies=auth)
+        ip_page = session.get("http://%s/comcast_network.php" % self.ip, cookies=auth)
 
         ip_page = BeautifulSoup(ip_page.text, "html.parser")
 
         elem = ip_page.find(text="WAN IP Address (IPv4):")
-        return ipaddress.IPv4Address(elem.parent.find_next("span", class_='value').text)
+        return ipaddress.IPv4Address(elem.parent.find_next("span", class_="value").text)
 
 
 class Web(AddressProvider):
@@ -241,8 +246,9 @@ class Web(AddressProvider):
     :param ipv6_url: URL of the service that retrieves an IPv6 address
     """
 
-    def __init__(self, ipv4_url='https://ipv4.icanhazip.com/',
-                 ipv6_url='https://ipv6.icanhazip.com/'):
+    def __init__(
+        self, ipv4_url="https://ipv4.icanhazip.com/", ipv6_url="https://ipv6.icanhazip.com/"
+    ):
         self.ipv4_url = ipv4_url
         self.ipv6_url = ipv6_url
 
@@ -281,30 +287,50 @@ class Local(AddressProvider):
 
     def __init__(self, interface, allow_private=False):
         import netifaces
+
         self.interface = interface
         self.allow_private = allow_private
         self.addresses = netifaces.ifaddresses(interface)
 
     def ipv4(self):
         import netifaces
+
         try:
-            addr = next(filter(lambda a: self.__is_valid_address(a),
-                               map(lambda addr_string: IPv4Address(addr_string['addr']),
-                                   self.addresses[netifaces.AF_INET])))
+            addr = next(
+                filter(
+                    lambda a: self.__is_valid_address(a),
+                    map(
+                        lambda addr_string: IPv4Address(addr_string["addr"]),
+                        self.addresses[netifaces.AF_INET],
+                    ),
+                )
+            )
 
             return addr
         except (KeyError, StopIteration):
-            raise AddressProviderException("Interface %s has no valid IPv4 address" % self.interface)
+            raise AddressProviderException(
+                "Interface %s has no valid IPv4 address" % self.interface
+            )
 
     def ipv6(self):
         import netifaces
+
         try:
-            addr = next(filter(lambda a: self.__is_valid_address(a),
-                               map(lambda addr_string: IPv6Address(addr_string['addr'].split('%', 1)[0]),
-                                   self.addresses[netifaces.AF_INET6])), None)
+            addr = next(
+                filter(
+                    lambda a: self.__is_valid_address(a),
+                    map(
+                        lambda addr_string: IPv6Address(addr_string["addr"].split("%", 1)[0]),
+                        self.addresses[netifaces.AF_INET6],
+                    ),
+                ),
+                None,
+            )
             return addr
         except (KeyError, StopIteration):
-            raise AddressProviderException("Interface %s has no valid IPv6 address" % self.interface)
+            raise AddressProviderException(
+                "Interface %s has no valid IPv6 address" % self.interface
+            )
 
     def __is_valid_address(self, addr):
         return addr.is_global or (self.allow_private and addr.is_private)
@@ -357,19 +383,19 @@ class FreeDNS(DNSService):
     @staticmethod
     def __update(update_url, address):
         # Ask for json response
-        r = session.get(update_url, params={'content-type': 'json', 'ip': address})
+        r = session.get(update_url, params={"content-type": "json", "ip": address})
         if r.status_code == requests.codes.ok:
             r = r.json()
             # Check for error
-            if 'errorno' in r:
+            if "errorno" in r:
                 # Throw exception using message from response
-                raise UpdateException(r.get('summary', "Unknown error"))
+                raise UpdateException(r.get("summary", "Unknown error"))
             else:
                 # List of domains that were updated
-                targets = r.get('targets', None)
-                if targets is not None or len(r['targets']) == 0:
+                targets = r.get("targets", None)
+                if targets is not None or len(r["targets"]) == 0:
                     # Return True if ip was updated (status 0). Status 100 means no change.
-                    return targets[0].get('statuscode', None) == 0
+                    return targets[0].get("statuscode", None) == 0
                 else:
                     raise UpdateException("Response did not include status.")
         else:
@@ -377,10 +403,10 @@ class FreeDNS(DNSService):
             return False
 
     def update_ipv4(self, address):
-        return FreeDNS.__update('https://sync.afraid.org/u/%s/' % self.ipv4_key, address)
+        return FreeDNS.__update("https://sync.afraid.org/u/%s/" % self.ipv4_key, address)
 
     def update_ipv6(self, address):
-        return FreeDNS.__update('https://v6.sync.afraid.org/u/%s/' % self.ipv6_key, address)
+        return FreeDNS.__update("https://v6.sync.afraid.org/u/%s/" % self.ipv6_key, address)
 
 
 class StandardService(DNSService):
@@ -411,32 +437,34 @@ class StandardService(DNSService):
         self.extra_params = extra_params
 
     def __update(self, service_host, address):
-        r = session.get('https://%s/nic/update' % service_host,
-                        auth=(self.username, self.password),
-                        params={**{'myip': address, 'hostname': self.hostname}, **self.extra_params})
-        status = r.text.split(' ', 1)[0]
-        if status == 'good':
+        r = session.get(
+            "https://%s/nic/update" % service_host,
+            auth=(self.username, self.password),
+            params={**{"myip": address, "hostname": self.hostname}, **self.extra_params},
+        )
+        status = r.text.split(" ", 1)[0]
+        if status == "good":
             return True
-        elif status == 'nochg':
+        elif status == "nochg":
             return False
-        elif status == 'badauth' or r.status_code == 401:
-            raise UpdateClientException('Incorrect login credentials')
-        elif status == '!donator':
-            raise UpdateClientException('Feature is only available to paying users')
-        elif status == 'notfqdn':
-            raise UpdateClientException('Incorrect hostname format')
-        elif status == 'nohost':
-            raise UpdateClientException('Hostname does not belong to this account')
-        elif status == 'abuse':
-            raise UpdateClientException('Hostname has been blocked for abuse')
-        elif status == 'badagent':
-            raise UpdateClientException('User agent or HTTP method was rejected')
-        elif status == 'dnserr':
-            raise UpdateServiceException('Server DNS error encountered')
-        elif status == '911':
-            raise UpdateServiceException('Server is not currently functioning correctly')
+        elif status == "badauth" or r.status_code == 401:
+            raise UpdateClientException("Incorrect login credentials")
+        elif status == "!donator":
+            raise UpdateClientException("Feature is only available to paying users")
+        elif status == "notfqdn":
+            raise UpdateClientException("Incorrect hostname format")
+        elif status == "nohost":
+            raise UpdateClientException("Hostname does not belong to this account")
+        elif status == "abuse":
+            raise UpdateClientException("Hostname has been blocked for abuse")
+        elif status == "badagent":
+            raise UpdateClientException("User agent or HTTP method was rejected")
+        elif status == "dnserr":
+            raise UpdateServiceException("Server DNS error encountered")
+        elif status == "911":
+            raise UpdateServiceException("Server is not currently functioning correctly")
         else:
-            raise UpdateException('Unknown response')
+            raise UpdateException("Unknown response")
 
     def update_ipv4(self, address):
         return self.__update(self.service_ipv4, address)
@@ -460,8 +488,7 @@ class NSUpdate(StandardService):
     """
 
     def __init__(self, hostname, secret_key):
-        super().__init__('ipv4.nsupdate.info', 'ipv6.nsupdate.info',
-                         hostname, secret_key, hostname)
+        super().__init__("ipv4.nsupdate.info", "ipv6.nsupdate.info", hostname, secret_key, hostname)
 
 
 class OVHDynDNS(StandardService):
@@ -478,9 +505,8 @@ class OVHDynDNS(StandardService):
     :param system: the type of update (default: ``dyndns``)
     """
 
-    def __init__(self, username, password, hostname, system='dyndns'):
-        super().__init__('www.ovh.com', None,
-                         username, password, hostname, system=system)
+    def __init__(self, username, password, hostname, system="dyndns"):
+        super().__init__("www.ovh.com", None, username, password, hostname, system=system)
 
     def update_ipv6(self, address):
         # OVH DynDNS does not support IPv6
@@ -500,8 +526,7 @@ class GoogleDomains(StandardService):
     """
 
     def __init__(self, username, password, hostname):
-        super().__init__('domains.google.com', None,
-                         username, password, hostname)
+        super().__init__("domains.google.com", None, username, password, hostname)
 
     def update_ipv6(self, address):
         # Google Domains does not support IPv6
@@ -509,12 +534,12 @@ class GoogleDomains(StandardService):
 
 
 def _load_config(arg_file):
-    config_files = [arg_file, '~/.config/dnsupdate.conf', '/etc/dnsupdate.conf']
+    config_files = [arg_file, "~/.config/dnsupdate.conf", "/etc/dnsupdate.conf"]
     for config_file in config_files:
         if config_file is not None:
             config_file = os.path.expanduser(config_file)
             try:
-                with open(config_file, 'r') as fd:
+                with open(config_file, "r") as fd:
                     return yaml.load(fd, _ConfigLoader), config_file
             except FileNotFoundError:
                 # All other exceptions should be propagated up so badly
@@ -524,13 +549,13 @@ def _load_config(arg_file):
 
 
 def _save_cache(cache_file, cache):
-    with open(cache_file, 'w') as fd:
+    with open(cache_file, "w") as fd:
         yaml.dump(cache, fd)
 
 
 def _load_cache(cache_file):
     try:
-        with open(cache_file, 'r') as fd:
+        with open(cache_file, "r") as fd:
             return yaml.load(fd, Loader=yaml.SafeLoader)
     except IOError:
         return dict()
@@ -538,44 +563,48 @@ def _load_cache(cache_file):
 
 def _parse_dns_service(service_root):
     if type(service_root) != str:
-        class_name = service_root['type']
+        class_name = service_root["type"]
         service_class = globals()[class_name]
-        if 'address_provider' in service_root:
-            providers = _parse_address_provider_protos(service_root['address_provider'])
+        if "address_provider" in service_root:
+            providers = _parse_address_provider_protos(service_root["address_provider"])
         else:
             providers = dict()
-        return service_class(**service_root.get('args', {})), providers
+        return service_class(**service_root.get("args", {})), providers
     else:
         return eval(service_root), dict()
 
 
 def _parse_address_provider(provider_root):
     if type(provider_root) != str:
-        class_name = provider_root['type']
+        class_name = provider_root["type"]
         provider_class = globals()[class_name]
-        return provider_class(**provider_root.get('args', {}))
+        return provider_class(**provider_root.get("args", {}))
     else:
         return eval(provider_root)
 
 
 def _parse_address_provider_protos(provider_root):
     providers = dict()
-    for proto in ('ipv4', 'ipv6'):
+    for proto in ("ipv4", "ipv6"):
         if proto in provider_root:
             providers[proto] = _parse_address_provider(provider_root[proto])
-    if not ('ipv4' in providers or 'ipv6' in providers):
-        providers['ipv4'] = providers['ipv6'] = _parse_address_provider(provider_root)
+    if not ("ipv4" in providers or "ipv6" in providers):
+        providers["ipv4"] = providers["ipv6"] = _parse_address_provider(provider_root)
     return providers
 
 
 def _get_arg_parser():
     parser = argparse.ArgumentParser(description="Dynamic DNS update client")
-    parser.add_argument('config', help="the config file to use", nargs='?')
-    parser.add_argument('-f', '--force-update',
-                        help=("""force an update to occur even if the address has not changed
-                                 or a service has been disabled"""),
-                        action='store_true', dest='force_update')
-    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + __version__)
+    parser.add_argument("config", help="the config file to use", nargs="?")
+    parser.add_argument(
+        "-f",
+        "--force-update",
+        help="""force an update to occur even if the address has not changed
+                                 or a service has been disabled""",
+        action="store_true",
+        dest="force_update",
+    )
+    parser.add_argument("-V", "--version", action="version", version="%(prog)s " + __version__)
     return parser
 
 
@@ -590,30 +619,31 @@ def main():
     args = _parse_args()
 
     config, config_file = _load_config(args.config)
-    cache_file = os.path.expanduser(config.get('cache_file', '~/.cache/dnsupdate.cache'))
+    cache_file = os.path.expanduser(config.get("cache_file", "~/.cache/dnsupdate.cache"))
     service_data_cache = _load_cache(cache_file)
 
     # Check and fix cache data format
     try:
-        service_data_list = service_data_cache['dns_services']
+        service_data_list = service_data_cache["dns_services"]
     except KeyError:
         service_data_list = list()
         service_data_cache = dict()
-        service_data_cache['dns_services'] = service_data_list
+        service_data_cache["dns_services"] = service_data_list
 
     # Enable all services if the config file has been updated
     new_mtime = os.path.getmtime(config_file)
-    force_enable = (service_data_cache.get('mtime', None) != new_mtime or
-                    args.force_update)
-    service_data_cache['mtime'] = new_mtime
+    force_enable = service_data_cache.get("mtime", None) != new_mtime or args.force_update
+    service_data_cache["mtime"] = new_mtime
 
     # Read global address provider from config, and use Web by default
-    global_providers = _parse_address_provider_protos(config.get('address_provider', {'type': 'Web'}))
+    global_providers = _parse_address_provider_protos(
+        config.get("address_provider", {"type": "Web"})
+    )
 
     # Cache of addresses from providers to prevent duplicate lookups
     new_addresses = dict()
 
-    services = config['dns_services']
+    services = config["dns_services"]
     for i, service_root in enumerate(services):
         service, providers = _parse_dns_service(service_root)
         # Merge global and local providers
@@ -628,11 +658,14 @@ def main():
 
         for proto, provider in providers.items():
             if provider is not None:
-                print("Updating %s address of service %d (%s)..." % ("IP" + proto[2:], i, str(service)))
+                print(
+                    "Updating %s address of service %d (%s)..."
+                    % ("IP" + proto[2:], i, str(service))
+                )
 
                 try:
                     service_proto_data = service_data.setdefault(proto, dict())
-                    if force_enable or service_proto_data.setdefault('enabled', True):
+                    if force_enable or service_proto_data.setdefault("enabled", True):
                         # Get updated address
                         if provider in new_addresses and proto in new_addresses[provider]:
                             new_address = new_addresses[provider][proto]
@@ -644,19 +677,22 @@ def main():
                             else:
                                 new_addresses[provider][proto] = new_address
                         # Get old address
-                        old_address = service_proto_data.get('address', None)
+                        old_address = service_proto_data.get("address", None)
                         if str(new_address) != old_address or args.force_update:
                             try:
-                                getattr(service, 'update_%s' % proto)(new_address)
-                                service_proto_data['address'] = str(new_address)
-                                service_proto_data['enabled'] = True
+                                getattr(service, "update_%s" % proto)(new_address)
+                                service_proto_data["address"] = str(new_address)
+                                service_proto_data["enabled"] = True
                                 print("Update successful.")
                             except UpdateClientException as e:
                                 print("Error: %s" % e, file=sys.stderr)
-                                print(("Update failed due to a configuration error. "
-                                       "Service will be disabled until the configuration "
-                                       "has been fixed."), file=sys.stderr)
-                                service_proto_data['enabled'] = False
+                                print(
+                                    "Update failed due to a configuration error. "
+                                    "Service will be disabled until the configuration "
+                                    "has been fixed.",
+                                    file=sys.stderr,
+                                )
+                                service_proto_data["enabled"] = False
                                 exit_code = ExitCode.CLIENT_ERROR
                             except UpdateServiceException as ue:
                                 print("Error: %s" % ue, file=sys.stderr)
@@ -664,23 +700,25 @@ def main():
                         else:
                             print("Address has not changed, no update needed.")
                     else:
-                        print(("Service has been disabled due to a previous client error. "
-                               "Please fix your configuration and try again."),
-                              file=sys.stderr)
+                        print(
+                            "Service has been disabled due to a previous client error. "
+                            "Please fix your configuration and try again.",
+                            file=sys.stderr,
+                        )
                         exit_code = ExitCode.CLIENT_ERROR
                 except Exception as e:
                     print("Error: %s" % e, file=sys.stderr)
                     exit_code = ExitCode.OTHER_ERROR
 
     # Delete any extra services from the cache
-    del service_data_list[len(services):]
+    del service_data_list[len(services) :]
 
     _save_cache(cache_file, service_data_cache)
 
     return exit_code
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
 
 # vim: ts=4:ps=4:et
