@@ -528,6 +528,61 @@ class GoogleDomains(StandardService):
         return DNSService.update_ipv6(self, address)
 
 
+class DesecService(DNSService):
+    """
+    Updates a domain on desec.io
+    uses the Dyn protocol.
+
+    :param hostname: your desec.io username (same as your domain)
+    :param token: token secret received during registration or created under
+                  TokenManagement
+    :param preserve: whether to preserve IPv4 ip addresses when updating IPv6 and
+                     vice versa. (This has to be set to True when both IPv4 and
+                     IPv6 addresses are used, as they would otherwise be deleted
+                     when the other is updated)
+    """
+
+    def __init__(self, hostname, token, preserve=False):
+        self.hostname = hostname
+        self.token = token
+        self.preserve = preserve
+
+    def __update(self, data):
+        r = session.get(
+            "https://update.dedyn.io",
+            auth=(self.hostname, self.token),
+            params={"hostname": self.hostname, **data},
+        )
+        code = r.status_code
+
+        if code == 200:
+            return True
+        elif code == 401:
+            raise UpdateClientException("Invalid login credentials.")
+        elif code == 404:
+            raise UpdateClientException("Hostname not found")
+        elif code == 429:
+            # Request was throttled. Time until available is given in response body
+            raise UpdateServiceException(r.text)
+        else:
+            raise UpdateException("Unknown response (%s)" % r.text)
+
+    def update_ipv4(self, address):
+        data = {"myipv4": address}
+        if self.preserve:
+            data["myipv6"] = "preserve"
+        return self.__update(data)
+
+    def update_ipv6(self, address):
+        data = {"myipv6": address}
+        if self.preserve:
+            data["myipv4"] = "preserve"
+        return self.__update(data)
+
+    def __str__(self):
+        return "%s [%s]" % (self.__class__.__name__, self.hostname)
+
+
 def _load_config(arg_file):
     config_files = [arg_file, "~/.config/dnsupdate.conf", "/etc/dnsupdate.conf"]
     for config_file in config_files:
