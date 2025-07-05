@@ -10,16 +10,11 @@
     eachSystem allSystems (system: let
       pkgs = nixpkgs.legacyPackages.${system};
     in {
-      defaultPackage = pkgs.python3Packages.callPackage ./. { };
+      packages.default = pkgs.python3Packages.callPackage ./. { };
 
-      defaultApp = {
-        type = "app";
-        program = "${self.defaultPackage.${system}}/bin/dnsupdate";
-      };
-
-      devShell = self.defaultPackage.${system};
+      devShells.default = self.packages.${system}.default;
     }) //
     eachSystem [ "x86_64-linux" ] (system: {
-      hydraJobs.build = self.defaultPackage.${system};
+      hydraJobs.build = self.packages.${system}.default;
     });
 }
