@@ -557,7 +557,7 @@ def _load_cache(cache_file):
 
 
 def _parse_dns_service(service_root):
-    if type(service_root) != str:
+    if not isinstance(service_root, str):
         class_name = service_root["type"]
         service_class = globals()[class_name]
         if "address_provider" in service_root:
@@ -570,7 +570,7 @@ def _parse_dns_service(service_root):
 
 
 def _parse_address_provider(provider_root):
-    if type(provider_root) != str:
+    if not isinstance(provider_root, str):
         class_name = provider_root["type"]
         provider_class = globals()[class_name]
         return provider_class(**provider_root.get("args", {}))
