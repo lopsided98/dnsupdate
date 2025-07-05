@@ -268,6 +268,34 @@ class Web(AddressProvider):
             urllib3_conn.allowed_gai_family = orig_allowed_gai_family
 
 
+class FritzBox(AddressProvider):
+    """
+    Retrieves address from a local AVM Fritz.Box router.
+    Is used only for IPv4 because IPv6 can be retrieved from the local interface.
+
+    :param box_addr: The host name or IP address to find the Box under
+    """
+
+    def __init__(self, box_addr="fritz.box") -> None:
+        self._box_addr = box_addr
+    
+    def ipv4(self):
+        import xml.etree.ElementTree as ET
+        session.headers["Content-Type"] = 'text/xml; charset="utf-8"'
+        session.headers["SOAPAction"] = "urn:schemas-upnp-org:service:WANIPConnection:1#GetExternalIPAddress"
+        data = '<?xml version="1.0" encoding="utf-8"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"> <s:Body> <u:GetExternalIPAddress xmlns:u="urn:schemas-upnp-org:service:WANIPConnection:1" /></s:Body></s:Envelope>'
+        res = session.post(f"http://{self._box_addr}:49000/igdupnp/control/WANIPConn1", data)
+        if res.status_code != 200: raise AddressProviderException(f"Could not get IP from Fritz.Box: {self._box_addr}")
+        try:
+            root = ET.fromstring(res.text)
+            addr = root[0][0][0].text
+            print(f"Found IPv4 address {addr} from {self._box_addr}")
+            return IPv4Address(addr)
+
+        except:
+            raise AddressProviderException(f"Could not get IP from Fritz.Box: {self._box_addr}")
+
+
 class Local(AddressProvider):
     """
     Retrieves addresses from a local network interface. If you are behind NAT
