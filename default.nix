@@ -1,5 +1,15 @@
-{ lib, fetchFromGitHub, buildPythonApplication, setuptools, requests, pyyaml
-, netifaces, beautifulsoup4, black, flake8 }:
+{
+  lib,
+  fetchFromGitHub,
+  buildPythonApplication,
+  setuptools,
+  requests,
+  pyyaml,
+  netifaces,
+  beautifulsoup4,
+  black,
+  flake8,
+}:
 
 buildPythonApplication {
   pname = "dnsupdate";
@@ -10,9 +20,17 @@ buildPythonApplication {
 
   nativeBuildInputs = [ setuptools ];
 
-  propagatedBuildInputs = [ requests pyyaml netifaces beautifulsoup4 ];
+  propagatedBuildInputs = [
+    requests
+    pyyaml
+    netifaces
+    beautifulsoup4
+  ];
 
-  checkInputs = [ black flake8 ];
+  checkInputs = [
+    black
+    flake8
+  ];
 
   preCheck = ''
     black --check .
