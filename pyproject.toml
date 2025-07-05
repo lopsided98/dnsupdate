@@ -2,6 +2,36 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "dnsupdate"
+authors = [
+    {name = "Ben Wolsieffer", email = "benwolsieffer@gmail.com"},
+]
+description = "A modern and flexible dynamic DNS client"
+readme = "README.rst"
+requires-python = ">=3.5"
+keywords = ["dns"]
+license = "GPL-3.0-or-later"
+classifiers = [
+    "Programming Language :: Python :: 3.5",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: System Administrators",
+    "Natural Language :: English",
+    "Topic :: System :: Networking"
+]
+dependencies = [
+  "PyYAML",
+  "requests"
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+Router-Address-Scraping = ["beautifulsoup4"]
+Local-Address-Provider = ["netifaces"]
+Build-Docs = ["sphinx-argparse"]
+
+[project.scripts]
+dnsupdate = "dnsupdate:main"
+
 [tool.black]
 line-length = 100
-experimental-string-processing = true
